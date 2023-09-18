@@ -259,12 +259,22 @@ void Game::CreateGeometry()
 	UINT miscIndices[] = { 0,1,2,3,4,5,6,7,8};
 	std::shared_ptr<Mesh> misc = std::make_shared<Mesh>(miscShapeVertices, 9, miscIndices, 9, context, device);
 	entityList.push_back(std::make_shared<Entity>(Entity(triangle)));
-	//entityList[0]->GetTransform()->SetPosition(0.5f, 0.5f, 0.5f);
+	entityList[0]->GetTransform()->SetPosition(0.5f, 0.5f, 0.5f);
 
 	entityList.push_back(std::make_shared<Entity>(Entity(triangle)));
-	//entityList[1]->GetTransform()->SetPosition(-0.5f, -0.5f, -0.5f);
 	entityList[1]->GetTransform()->SetScale(0.5f, 0.5f, 0.5f);
-	
+
+	entityList.push_back(std::make_shared<Entity>(Entity(triangle)));
+	entityList[2]->GetTransform()->SetRotation(0.0f, 0.0f, 0.5f);
+	entityList[2]->GetTransform()->SetPosition(-0.8f, 0.1f, 0.0f);
+
+	entityList.push_back(std::make_shared<Entity>(Entity(misc)));
+	entityList[3]->GetTransform()->SetScale(2.0f, 1.0f, 0.5f);
+	entityList[3]->GetTransform()->SetPosition(0.0f, 0.5f, 0.0f);
+
+	entityList.push_back(std::make_shared<Entity>(Entity(square)));
+	entityList[4]->GetTransform()->SetRotation(0.0f, 0.0f, 0.75f);
+	entityList[4]->GetTransform()->SetPosition(1.0f, -0.7f, 0.0f);
 }
 
 
@@ -298,7 +308,7 @@ void Game::Update(float deltaTime, float totalTime)
 	input.SetKeyboardCapture(io.WantCaptureKeyboard);
 	input.SetMouseCapture(io.WantCaptureMouse);
 	// Show the demo window
-	ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 
 	ImGui::Begin("Assignment 3");
 	ImGui::Text("Framerate %f", ImGui::GetIO().Framerate);
@@ -306,13 +316,44 @@ void Game::Update(float deltaTime, float totalTime)
 	ImGui::Text("Height: %i", windowHeight);
 
 	//sliders for tint and offset;
-	ImGui::DragFloat3("Offset", &offset.x);
 	ImGui::ColorEdit4("Tint", &colorTint.x);
+	for (int i = 0; i < entityList.size(); i++) {
+		ImGui::PushID(i);
+		ImGui::Text("Entity %i", i);
+		XMFLOAT3 position = entityList[i]->GetTransform()->GetPosition();
+		
+		if (ImGui::DragFloat3("Position", &position.x)) {
+			entityList[i]->GetTransform()->SetPosition(position);
+		}
+		
+		XMFLOAT3 rotation = entityList[i]->GetTransform()->GetPitchYawRoll();
+		if (ImGui::DragFloat3("Rotation", &rotation.x)) {
+			entityList[i]->GetTransform()->SetRotation(rotation);
+		}
+		
+		XMFLOAT3 scale = entityList[i]->GetTransform()->GetScale();
+		if (ImGui::DragFloat3("Scale", &scale.x)) {
+			entityList[i]->GetTransform()->SetScale(scale);
+		}
+		ImGui::PopID();
+	}
 	ImGui::End();
+
+	//Update Geometery
+	
+	entityList[0]->GetTransform()->Rotate(0.0f, 0.0f, 0.0001f);
+	entityList[1]->GetTransform()->Scale(1.0001, 1.0f, 1.0f);
+	entityList[2]->GetTransform()->MoveAbsolute(cos(totalTime), 0.0f, 0.0f);
+	entityList[3]->GetTransform()->MoveAbsolute(0.0f, -0.0001f, 0.0f);
+	entityList[3]->GetTransform()->Scale(1.0001, 1.00002f, 1.0f);
+	
+
 
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::GetInstance().KeyDown(VK_ESCAPE))
 		Quit();
+
+
 }
 
 // --------------------------------------------------------
