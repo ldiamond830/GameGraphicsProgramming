@@ -1,6 +1,7 @@
 #pragma once
 #include "Transform.h"
 #include <DirectXMath.h>
+#include <memory>
 class Camera
 {
 private:

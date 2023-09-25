@@ -11,7 +11,7 @@ private:
 		DirectX::XMFLOAT3 forward;
 		DirectX::XMFLOAT3 up;
 		DirectX::XMFLOAT3 right;
-
+		void SetDirectionVectors();
 	public:
 		Transform();
 		void SetPosition(float x, float y, float z);
