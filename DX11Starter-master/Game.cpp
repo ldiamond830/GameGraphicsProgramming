@@ -13,7 +13,7 @@
 
 // For the DirectX Math library
 using namespace DirectX;
-
+using namespace std;
 // --------------------------------------------------------
 // Constructor
 //
@@ -112,7 +112,7 @@ void Game::Init()
 
 	device->CreateBuffer(&cbDesc, 0, vsConstantBuffer.GetAddressOf());
 
-
+	camera = make_shared<Camera>(new Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(0, 0, -10.0f), XMFLOAT3(0, 0, 0), 90, 0.1f, 500.0f, 1.0f));
 }
 
 // --------------------------------------------------------
@@ -287,6 +287,7 @@ void Game::OnResize()
 {
 	// Handle base-level DX resize stuff
 	DXCore::OnResize();
+	camera->UpdateProjectionMatrix((float)this->windowWidth / this->windowHeight);
 }
 
 // --------------------------------------------------------
@@ -342,12 +343,12 @@ void Game::Update(float deltaTime, float totalTime)
 	//Update Geometery
 	
 	entityList[0]->GetTransform()->Rotate(0.0f, 0.0f, 0.0001f);
-	entityList[0]->GetTransform()->MoveRelative(0.0001, 0.0f, 0.0f);
-	entityList[2]->GetTransform()->MoveAbsolute(cos(totalTime), 0.0f, 0.0f);
+	entityList[0]->GetTransform()->MoveRelative(0.0001f, 0.0f, 0.0f);
+	entityList[2]->GetTransform()->MoveAbsolute((float)cos(totalTime), 0.0f, 0.0f);
 	entityList[3]->GetTransform()->MoveAbsolute(0.0f, -0.0001f, 0.0f);
-	entityList[3]->GetTransform()->Scale(1.0001, 1.00002f, 1.0f);
+	entityList[3]->GetTransform()->Scale(1.0001f, 1.00002f, 1.0f);
 	
-
+	camera->Update(deltaTime);
 
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::GetInstance().KeyDown(VK_ESCAPE))
@@ -361,16 +362,6 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
-	
-	VertexShaderExternalData vsData;
-	vsData.colorTint = colorTint;
-	
-	/*
-	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-	context->Map(vsConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
-	context->Unmap(vsConstantBuffer.Get(), 0);
-	*/
 	// Frame START
 	// - These things should happen ONCE PER FRAME
 	// - At the beginning of Game::Draw() before drawing *anything*
@@ -382,17 +373,12 @@ void Game::Draw(float deltaTime, float totalTime)
 		// Clear the depth buffer (resets per-pixel occlusion information)
 		context->ClearDepthStencilView(depthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
-	/*
-	context->VSSetConstantBuffers(
-		0, // Which slot (register) to bind the buffer to?
-		1, // How many are we activating? Can do multiple at once
-		vsConstantBuffer.GetAddressOf());
-		*/
+	
 	// DRAW geometry
 	// - These steps are generally repeated for EACH object you draw
 	// - Other Direct3D calls will also be necessary to do more complex things
 	for (int i = 0; i < entityList.size(); i++) {
-		entityList[i]->Draw(vsData, vsConstantBuffer, context);
+		entityList[i]->Draw(colorTint, vsConstantBuffer, context, camera);
 	}
 
 	

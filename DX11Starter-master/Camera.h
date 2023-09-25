@@ -11,13 +11,16 @@ private:
 	float fov;
 	float nearClip;
 	float farClip;
+	float mouseLookSpeed;
 	bool isPerspective;
 	void UpdateViewMatrix();
-	void UpdateProjectionMatrix(DirectX::XMFLOAT2 aspectRatio);
+	
 
 public:
-	Camera(DirectX::XMFLOAT2 aspectRatio, DirectX::XMFLOAT3 initialPosition, DirectX::XMFLOAT3 initialRotation, float _fov, float _nearClip, float _farClip);
+	Camera(float aspectRatio, DirectX::XMFLOAT3 initialPosition, DirectX::XMFLOAT3 initialRotation, float _fov, float _nearClip, float _farClip, float _mouseLookSpeed);
 	DirectX::XMFLOAT4X4 GetView();
 	DirectX::XMFLOAT4X4 GetProjection();
+	void Update(float dt);
+	void UpdateProjectionMatrix(float aspectRatio);
 };
 

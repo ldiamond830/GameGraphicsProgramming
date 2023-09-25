@@ -16,10 +16,14 @@ std::shared_ptr<Transform> Entity::GetTransform()
 	return transform;
 }
 
-void Entity::Draw(VertexShaderExternalData vsData, Microsoft::WRL::ComPtr <ID3D11Buffer> vsConstantBuffer, Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
+void Entity::Draw(DirectX::XMFLOAT4 _colorTint, Microsoft::WRL::ComPtr <ID3D11Buffer> vsConstantBuffer, Microsoft::WRL::ComPtr<ID3D11DeviceContext> context, std::shared_ptr<Camera> camera)
 {
+	VertexShaderExternalData vsData;
+	vsData.colorTint = _colorTint;
 	vsData.worldMatrix = transform->GetWorldMatrix();
-	//color tint is set before being passed in to have easier acess to ImGui data
+	vsData.viewMatrix = camera->GetView();
+	vsData.projectionMatrix = camera->GetProjection();
+	
 
 	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
 	context->Map(vsConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);

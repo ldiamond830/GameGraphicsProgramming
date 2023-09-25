@@ -6,6 +6,7 @@
 #include <vector>
 #include "Mesh.h"
 #include "Entity.h"
+#include "Camera.h"
 #include <memory>
 #include <DirectXMath.h>
 class Game 
@@ -46,6 +47,7 @@ private:
 	Microsoft::WRL::ComPtr <ID3D11Buffer> vsConstantBuffer;
 
 	std::vector<std::shared_ptr<Entity>> entityList;
+	std::shared_ptr<Camera> camera;
 
 	DirectX::XMFLOAT4 colorTint = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	DirectX::XMFLOAT3 offset = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
