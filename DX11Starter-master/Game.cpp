@@ -111,8 +111,11 @@ void Game::Init()
 	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
 
 	device->CreateBuffer(&cbDesc, 0, vsConstantBuffer.GetAddressOf());
-
-	camera = make_shared<Camera>(new Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(0, 0, -10.0f), XMFLOAT3(0, 0, 0), 90, 0.1f, 500.0f, 1.0f));
+	
+	cameraList.push_back(make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(0.0f, 0.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), 90, 0.1f, 500.0f, 0.1f, 5.0f)));
+	cameraList.push_back(make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(5.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 20.0f, 0.0f), 45, 0.1f, 500.0f, 0.1f, 5.0f)));
+	cameraList.push_back(make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(0.0f, 1.0f, -0.5f), XMFLOAT3(0.0f, 20.0f, 0.0f), 10, 0.1f, 500.0f, 0.1f, 5.0f)));
+	mainCamera = cameraList[mainCameraIndex];
 }
 
 // --------------------------------------------------------
@@ -287,7 +290,10 @@ void Game::OnResize()
 {
 	// Handle base-level DX resize stuff
 	DXCore::OnResize();
-	camera->UpdateProjectionMatrix((float)this->windowWidth / this->windowHeight);
+	for (shared_ptr<Camera> camera : cameraList) {
+		camera->UpdateProjectionMatrix((float)this->windowWidth / this->windowHeight);
+	}
+
 }
 
 // --------------------------------------------------------
@@ -316,6 +322,10 @@ void Game::Update(float deltaTime, float totalTime)
 	ImGui::Text("Width: %i", windowWidth);
 	ImGui::Text("Height: %i", windowHeight);
 
+	if (ImGui::Button("Next Camera")) {
+		mainCameraIndex = (mainCameraIndex + 1) % cameraList.size();
+		mainCamera = cameraList[mainCameraIndex];
+	}
 	//sliders for tint and offset;
 	ImGui::ColorEdit4("Tint", &colorTint.x);
 	for (int i = 0; i < entityList.size(); i++) {
@@ -338,6 +348,8 @@ void Game::Update(float deltaTime, float totalTime)
 		}
 		ImGui::PopID();
 	}
+	
+
 	ImGui::End();
 
 	//Update Geometery
@@ -348,7 +360,7 @@ void Game::Update(float deltaTime, float totalTime)
 	entityList[3]->GetTransform()->MoveAbsolute(0.0f, -0.0001f, 0.0f);
 	entityList[3]->GetTransform()->Scale(1.0001f, 1.00002f, 1.0f);
 	
-	camera->Update(deltaTime);
+	mainCamera->Update(deltaTime);
 
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::GetInstance().KeyDown(VK_ESCAPE))
@@ -378,7 +390,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - These steps are generally repeated for EACH object you draw
 	// - Other Direct3D calls will also be necessary to do more complex things
 	for (int i = 0; i < entityList.size(); i++) {
-		entityList[i]->Draw(colorTint, vsConstantBuffer, context, camera);
+		entityList[i]->Draw(colorTint, vsConstantBuffer, context, mainCamera);
 	}
 
 	

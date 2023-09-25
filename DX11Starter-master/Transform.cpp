@@ -20,6 +20,7 @@ Transform::Transform()
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
+	SetDirectionVectors();
 
 	DirectX::XMStoreFloat4x4(&world, DirectX::XMMatrixIdentity());
 	DirectX::XMStoreFloat4x4(&worldInverseTranspose, DirectX::XMMatrixIdentity());

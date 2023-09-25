@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include "Input.h"
+#include "Transform.h"
 using namespace DirectX;
 
 void Camera::UpdateViewMatrix()
@@ -18,7 +19,7 @@ void Camera::UpdateProjectionMatrix(float aspectRatio)
 	XMStoreFloat4x4(&projectionMatrix, XMMatrixPerspectiveFovLH(fov, aspectRatio, nearClip, farClip));
 }
 
-Camera::Camera(float aspectRatio, DirectX::XMFLOAT3 initialPosition, DirectX::XMFLOAT3 initialRotation, float _fov, float _nearClip, float _farClip, float _mouseLookSpeed)
+Camera::Camera(float aspectRatio, DirectX::XMFLOAT3 initialPosition, DirectX::XMFLOAT3 initialRotation, float _fov, float _nearClip, float _farClip, float _mouseLookSpeed, float _moveSpeed)
 {
 	transform = std::make_shared<Transform>(Transform());
 
@@ -28,6 +29,7 @@ Camera::Camera(float aspectRatio, DirectX::XMFLOAT3 initialPosition, DirectX::XM
 	nearClip = _nearClip;
 	farClip = _farClip;
 	mouseLookSpeed = _mouseLookSpeed;
+	moveSpeed = _moveSpeed;
 
 	UpdateViewMatrix();
 	UpdateProjectionMatrix(aspectRatio);
@@ -47,22 +49,22 @@ void Camera::Update(float dt)
 {
 	Input& input = Input::GetInstance();
 	if (input.KeyDown('W')) {
-		transform->MoveRelative(0.0f, 0.0f, 1.0f * dt);
+		transform->MoveRelative(0.0f, 0.0f,moveSpeed * dt);
 	}
 	else if (input.KeyDown('S')) {
-		transform->MoveRelative(0.0f, 0.0f, -1.0f * dt);
+		transform->MoveRelative(0.0f, 0.0f, -moveSpeed * dt);
 	}
 	else if (input.KeyDown('A')) {
-		transform->MoveRelative(-1.0f * dt, 0.0f, 0.0f);
+		transform->MoveRelative(-moveSpeed * dt, 0.0f, 0.0f);
 	}
 	else if (input.KeyDown('D')) {
-		transform->MoveRelative(1.0f * dt, 0.0f, 0.0f);
+		transform->MoveRelative(moveSpeed * dt, 0.0f, 0.0f);
 	}
 	else if (input.KeyDown(VK_SPACE)) {
-		transform->MoveAbsolute(0.0f, 1.0f * dt, 0.0f);
+		transform->MoveAbsolute(0.0f, moveSpeed * dt, 0.0f);
 	}
 	else if (input.KeyDown('X')) {
-		transform->MoveAbsolute(0.0f, 1.0f * dt, 0.0f);
+		transform->MoveAbsolute(0.0f, -moveSpeed * dt, 0.0f);
 	}
 
 	if (input.MouseLeftDown()) {

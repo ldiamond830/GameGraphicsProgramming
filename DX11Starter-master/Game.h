@@ -47,7 +47,9 @@ private:
 	Microsoft::WRL::ComPtr <ID3D11Buffer> vsConstantBuffer;
 
 	std::vector<std::shared_ptr<Entity>> entityList;
-	std::shared_ptr<Camera> camera;
+	std::shared_ptr<Camera> mainCamera;
+	int mainCameraIndex = 0;
+	std::vector<std::shared_ptr<Camera>> cameraList;
 
 	DirectX::XMFLOAT4 colorTint = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	DirectX::XMFLOAT3 offset = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
