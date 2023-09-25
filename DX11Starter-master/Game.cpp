@@ -342,7 +342,7 @@ void Game::Update(float deltaTime, float totalTime)
 	//Update Geometery
 	
 	entityList[0]->GetTransform()->Rotate(0.0f, 0.0f, 0.0001f);
-	entityList[1]->GetTransform()->Scale(1.0001, 1.0f, 1.0f);
+	entityList[0]->GetTransform()->MoveRelative(0.0001, 0.0f, 0.0f);
 	entityList[2]->GetTransform()->MoveAbsolute(cos(totalTime), 0.0f, 0.0f);
 	entityList[3]->GetTransform()->MoveAbsolute(0.0f, -0.0001f, 0.0f);
 	entityList[3]->GetTransform()->Scale(1.0001, 1.00002f, 1.0f);
