@@ -237,13 +237,11 @@ void Game::CreateGeometry()
 		{XMFLOAT3(0.2f, 0.7f, +0.0f), red },
 		{XMFLOAT3(0.2f, 0.6f, +0.0f), blue },
 		{XMFLOAT3(0.0f, +0.7f, +0.0f), green },
-		{XMFLOAT3(0.2f, 0.7f, +0.0f), red },
-		{XMFLOAT3(0.0f, +0.7f, +0.0f), green },
 		{XMFLOAT3(0.0f, +0.8f, +0.0f), green },
 
 	};
-	UINT quadIndices[] = { 0,1,2,3,4,5 };
-	std::shared_ptr<Mesh> square = std::make_shared<Mesh>(quadVerticies, 6, quadIndices, 6, context, device);
+	UINT quadIndices[] = { 0,1,2,0,2,3 };
+	std::shared_ptr<Mesh> square = std::make_shared<Mesh>(quadVerticies, 4, quadIndices, 6, context, device);
 	
 
 	Vertex miscShapeVertices[] = {
@@ -251,16 +249,14 @@ void Game::CreateGeometry()
 		{XMFLOAT3(-0.4f, +0.7f, 0.0f), blue},
 		{XMFLOAT3(-0.3f, +0.8f, 0.0f), blue},
 		
-		{XMFLOAT3(-0.4f, +0.7f, 0.0f), red},
 		{XMFLOAT3(-0.4f, +0.4f, 0.0f), red},
 		{XMFLOAT3(-0.5f, +0.55f, 0.0f), red},
 		
 		{XMFLOAT3(-0.3f, +0.3f, 0.0f), green},
-		{XMFLOAT3(-0.4f, +0.4f, 0.0f), green},
 		{XMFLOAT3(-0.2f, +0.4f, 0.0f), green},
 	};
-	UINT miscIndices[] = { 0,1,2,3,4,5,6,7,8};
-	std::shared_ptr<Mesh> misc = std::make_shared<Mesh>(miscShapeVertices, 9, miscIndices, 9, context, device);
+	UINT miscIndices[] = { 0,1,2,1,3,4,5,3,6};
+	std::shared_ptr<Mesh> misc = std::make_shared<Mesh>(miscShapeVertices, 7, miscIndices, 9, context, device);
 	entityList.push_back(std::make_shared<Entity>(Entity(triangle)));
 	entityList[0]->GetTransform()->SetPosition(0.5f, 0.5f, 0.5f);
 

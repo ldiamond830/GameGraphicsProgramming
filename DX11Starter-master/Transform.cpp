@@ -2,17 +2,14 @@
 using namespace DirectX;
 void Transform::SetDirectionVectors()
 {
-	float tempX = rotation.x;
-	float tempY = rotation.y;
-	float tempZ = rotation.z;
-	XMVECTOR rotation = XMQuaternionRotationRollPitchYaw(tempX, tempY, tempZ);
-	XMVECTOR rotatedForward = XMVector3Rotate(XMVECTOR{ 0,0,1 }, rotation);
+	XMVECTOR rotationQuat = XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3(&rotation));
+	XMVECTOR rotatedForward = XMVector3Rotate(XMVECTOR{ 0,0,1 }, rotationQuat);
 	XMStoreFloat3(&forward, rotatedForward);
 
-	XMVECTOR rotatedUp = XMVector3Rotate(XMVECTOR{ 0,1,0 }, rotation);
+	XMVECTOR rotatedUp = XMVector3Rotate(XMVECTOR{ 0,1,0 }, rotationQuat);
 	XMStoreFloat3(&up, rotatedUp);
 
-	XMVECTOR rotatedRight = XMVector3Rotate(XMVECTOR{ 1,0,0 }, rotation);
+	XMVECTOR rotatedRight = XMVector3Rotate(XMVECTOR{ 1,0,0 }, rotationQuat);
 	XMStoreFloat3(&right, rotatedRight);
 }
 Transform::Transform()
