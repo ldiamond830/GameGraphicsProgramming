@@ -19,6 +19,21 @@ void Camera::UpdateProjectionMatrix(float aspectRatio)
 	XMStoreFloat4x4(&projectionMatrix, XMMatrixPerspectiveFovLH(fov, aspectRatio, nearClip, farClip));
 }
 
+std::shared_ptr<Transform> Camera::GetTransform()
+{
+	return transform;
+}
+
+float Camera::GetFov()
+{
+	return fov;
+}
+
+float Camera::GetMoveSpeed()
+{
+	return moveSpeed;
+}
+
 Camera::Camera(float aspectRatio, DirectX::XMFLOAT3 initialPosition, DirectX::XMFLOAT3 initialRotation, float _fov, float _nearClip, float _farClip, float _mouseLookSpeed, float _moveSpeed)
 {
 	transform = std::make_shared<Transform>(Transform());

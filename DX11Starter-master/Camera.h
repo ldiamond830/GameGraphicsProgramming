@@ -23,5 +23,8 @@ public:
 	DirectX::XMFLOAT4X4 GetProjection();
 	void Update(float dt);
 	void UpdateProjectionMatrix(float aspectRatio);
+	std::shared_ptr<Transform> GetTransform();
+	float GetFov();
+	float GetMoveSpeed();
 };
 

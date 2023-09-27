@@ -47,7 +47,7 @@ private:
 	Microsoft::WRL::ComPtr <ID3D11Buffer> vsConstantBuffer;
 
 	std::vector<std::shared_ptr<Entity>> entityList;
-	std::shared_ptr<Camera> mainCamera;
+	std::shared_ptr<Camera> currentCamera;
 	int mainCameraIndex = 0;
 	std::vector<std::shared_ptr<Camera>> cameraList;
 
