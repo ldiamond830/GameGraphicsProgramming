@@ -9,6 +9,8 @@
 #include "Camera.h"
 #include <memory>
 #include <DirectXMath.h>
+#include "SimpleShader.h"
+#include "Material.h"
 class Game 
 	: public DXCore
 {
@@ -41,17 +43,17 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
 	
 	// Shaders and shader-related constructs
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
+	std::shared_ptr<SimplePixelShader> pixelShader;
+	std::shared_ptr<SimpleVertexShader> vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
-	Microsoft::WRL::ComPtr <ID3D11Buffer> vsConstantBuffer;
 
 	std::vector<std::shared_ptr<Entity>> entityList;
+	std::vector<std::shared_ptr<Material>> materialList;
 	std::shared_ptr<Camera> currentCamera;
 	int mainCameraIndex = 0;
 	std::vector<std::shared_ptr<Camera>> cameraList;
 
-	DirectX::XMFLOAT4 colorTint = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	DirectX::XMFLOAT4 colorTint = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	DirectX::XMFLOAT3 offset = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 };
 

@@ -15,6 +15,7 @@ private:
 
 public:
 	Mesh(Vertex* vertices, int numVertices, unsigned int* indices, int numIndeces, Microsoft::WRL::ComPtr<ID3D11DeviceContext> drawCommandPtr, Microsoft::WRL::ComPtr <ID3D11Device> bufferCreator);
+	Mesh(const char* filePath, Microsoft::WRL::ComPtr<ID3D11DeviceContext> drawCommandPtr, Microsoft::WRL::ComPtr<ID3D11Device> bufferCreator);
 	~Mesh();
 	Microsoft::WRL::ComPtr<ID3D11Buffer> GetVertexBuffer();
 	Microsoft::WRL::ComPtr<ID3D11Buffer> GetIndexBuffer();
