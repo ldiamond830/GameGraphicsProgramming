@@ -162,9 +162,9 @@ void Game::CreateGeometry()
 	//    since we're describing the triangle in terms of the window itself
 	Vertex triangleVertices[] =
 	{
-		{ XMFLOAT3(+0.0f, +0.5f, +0.0f), red },
-		{ XMFLOAT3(+0.5f, -0.5f, +0.0f), blue },
-		{ XMFLOAT3(-0.5f, -0.5f, +0.0f), green },
+		{ XMFLOAT3(+0.0f, +0.5f, +0.0f), XMFLOAT3(0,0,-1), XMFLOAT2(0,0)},
+		{ XMFLOAT3(+0.5f, -0.5f, +0.0f), XMFLOAT3(0,0,-1), XMFLOAT2(0,0)},
+		{ XMFLOAT3(-0.5f, -0.5f, +0.0f), XMFLOAT3(0,0,-1), XMFLOAT2(0,0)},
 	};
 
 	// Set up indices, which tell us which vertices to use and in which order
@@ -203,7 +203,7 @@ void Game::CreateGeometry()
 		{XMFLOAT3(-0.2f, +0.4f, 0.0f), XMFLOAT3(0,0,-1), XMFLOAT2(0,0)},
 	};
 	UINT miscIndices[] = { 0,1,2,1,3,4,5,3,6};
-	std::shared_ptr<Mesh> misc = std::make_shared<Mesh>(miscShapeVertices, 7, miscIndices, 9, context, device);
+	std::shared_ptr<Mesh> misc = std::make_shared<Mesh>(Mesh(FixPath(L"../../Assets/Models/sphere.obj").c_str(), context, device));
 	entityList.push_back(std::make_shared<Entity>(Entity(triangle, materialList[0])));
 	entityList[0]->GetTransform()->SetPosition(0.5f, 0.5f, 0.5f);
 

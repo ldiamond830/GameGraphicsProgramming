@@ -32,7 +32,7 @@ Mesh::Mesh(Vertex* vertices, int numVertices, unsigned int* indices, int numIndi
     bufferCreator->CreateBuffer(&ibd, &initialIndexData, indexBuffer.GetAddressOf());
 }
 
-Mesh::Mesh(const char* filePath, Microsoft::WRL::ComPtr<ID3D11DeviceContext> drawCommandPtr, Microsoft::WRL::ComPtr<ID3D11Device> bufferCreator)
+Mesh::Mesh(const wchar_t* filePath, Microsoft::WRL::ComPtr<ID3D11DeviceContext> drawCommandPtr, Microsoft::WRL::ComPtr<ID3D11Device> bufferCreator)
 {
 	this->drawCommandPtr = drawCommandPtr;
 
