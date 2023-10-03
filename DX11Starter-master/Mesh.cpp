@@ -253,24 +253,24 @@ Mesh::Mesh(const wchar_t* filePath, Microsoft::WRL::ComPtr<ID3D11DeviceContext> 
 
 	D3D11_BUFFER_DESC vbd = {};
 	vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	vbd.ByteWidth = sizeof(Vertex) * (numVertices);
+	vbd.ByteWidth = sizeof(Vertex) * vertCounter;
 	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vbd.CPUAccessFlags = 0;
 	vbd.MiscFlags = 0;
 	vbd.StructureByteStride = 0;
 	D3D11_SUBRESOURCE_DATA initialVertexData = {};
-	initialVertexData.pSysMem = &verts;
+	initialVertexData.pSysMem = &verts[0];
 	bufferCreator->CreateBuffer(&vbd, &initialVertexData, vertexBuffer.GetAddressOf());
 
 	D3D11_BUFFER_DESC ibd = {};
 	ibd.Usage = D3D11_USAGE_IMMUTABLE;
-	ibd.ByteWidth = sizeof(unsigned int) * numIndices;
+	ibd.ByteWidth = sizeof(unsigned int) * indexCounter;
 	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	ibd.CPUAccessFlags = 0;
 	ibd.MiscFlags = 0;
 	ibd.StructureByteStride = 0;
 	D3D11_SUBRESOURCE_DATA initialIndexData = {};
-	initialIndexData.pSysMem = &indices;
+	initialIndexData.pSysMem = &indices[0];
 	bufferCreator->CreateBuffer(&ibd, &initialIndexData, indexBuffer.GetAddressOf());
 }
 
