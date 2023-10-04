@@ -272,6 +272,9 @@ Mesh::Mesh(const wchar_t* filePath, Microsoft::WRL::ComPtr<ID3D11DeviceContext> 
 	D3D11_SUBRESOURCE_DATA initialIndexData = {};
 	initialIndexData.pSysMem = &indices[0];
 	bufferCreator->CreateBuffer(&ibd, &initialIndexData, indexBuffer.GetAddressOf());
+
+	this->numIndices = indexCounter;
+	this->numVertices = vertCounter;
 }
 
 Mesh::~Mesh()

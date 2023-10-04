@@ -47,12 +47,13 @@ void Entity::Draw(DirectX::XMFLOAT4 _colorTint, Microsoft::WRL::ComPtr<ID3D11Dev
 	material->GetVertexShader()->SetShader();
 	material->GetPixelShader()->SetShader();
 	std::shared_ptr<SimpleVertexShader> vs = material->GetVertexShader();
-	vs->SetFloat4("colorTint", material->GetColorTint()); // Strings here MUST
+	std::shared_ptr<SimplePixelShader> ps = material->GetPixelShader();
+	ps->SetFloat4("colorTint", material->GetColorTint()); // Strings here MUST
 	vs->SetMatrix4x4("world", transform->GetWorldMatrix()); // match variable
 	vs->SetMatrix4x4("view", camera->GetView()); // names in your
 	vs->SetMatrix4x4("projection", camera->GetProjection()); // shader’s cbuffer!
 
 	vs->CopyAllBufferData();
-
+	ps->CopyAllBufferData();
 	mesh->Draw();
 }

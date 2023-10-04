@@ -69,9 +69,9 @@ void Game::Init()
 	//  - You'll be expanding and/or replacing these later
 	LoadShaders();
 
-	materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), pixelShader, vertexShader)));
-	materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.25f, 1.0f), pixelShader, vertexShader)));
-	materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), pixelShader, vertexShader)));
+	materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));
+	materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.25f, 1.0f), customPixelShader, vertexShader)));
+	materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));
 	CreateGeometry();
 	
 	// Set initial graphics API state
@@ -113,7 +113,7 @@ void Game::Init()
 	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
 
 	
-	cameraList.push_back(make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(0.0f, 0.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), 90, 0.1f, 500.0f, 0.1f, 5.0f)));
+	cameraList.push_back(make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(0.0f, 0.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), 45, 0.1f, 500.0f, 0.1f, 5.0f)));
 	cameraList.push_back(make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(5.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 20.0f, 0.0f), 45, 0.1f, 500.0f, 0.1f, 5.0f)));
 	cameraList.push_back(make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(0.0f, 1.0f, -0.5f), XMFLOAT3(0.0f, 20.0f, 0.0f), 10, 0.1f, 500.0f, 0.1f, 5.0f)));
 	currentCamera = cameraList[mainCameraIndex];
@@ -131,8 +131,10 @@ void Game::LoadShaders()
 {
 	vertexShader = std::make_shared<SimpleVertexShader>(device, context,
 		FixPath(L"VertexShader.cso").c_str());
-	pixelShader = std::make_shared<SimplePixelShader>(device, context,
+	defaultPixelShader = std::make_shared<SimplePixelShader>(device, context,
 		FixPath(L"PixelShader.cso").c_str());
+	customPixelShader = std::make_shared<SimplePixelShader>(device, context,
+		FixPath(L"CustomPS.cso").c_str());
 }
 
 
@@ -175,7 +177,7 @@ void Game::CreateGeometry()
 
 	unsigned int triangleIndices[] = { 0, 1, 2 };
 
-	std::shared_ptr<Mesh> triangle = std::make_shared<Mesh>(triangleVertices, 3, triangleIndices, 3, context, device);
+	std::shared_ptr<Mesh> torus = std::make_shared<Mesh>(Mesh(FixPath(L"../../Assets/Models/torus.obj").c_str(), context, device));
 	
 
 	Vertex quadVerticies[] =
@@ -188,7 +190,7 @@ void Game::CreateGeometry()
 
 	};
 	UINT quadIndices[] = { 0,1,2,0,2,3 };
-	std::shared_ptr<Mesh> square = std::make_shared<Mesh>(quadVerticies, 4, quadIndices, 6, context, device);
+	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(Mesh(FixPath(L"../../Assets/Models/cube.obj").c_str(), context, device));
 	
 
 	Vertex miscShapeVertices[] = {
@@ -203,24 +205,25 @@ void Game::CreateGeometry()
 		{XMFLOAT3(-0.2f, +0.4f, 0.0f), XMFLOAT3(0,0,-1), XMFLOAT2(0,0)},
 	};
 	UINT miscIndices[] = { 0,1,2,1,3,4,5,3,6};
-	std::shared_ptr<Mesh> misc = std::make_shared<Mesh>(Mesh(FixPath(L"../../Assets/Models/sphere.obj").c_str(), context, device));
-	entityList.push_back(std::make_shared<Entity>(Entity(triangle, materialList[0])));
-	entityList[0]->GetTransform()->SetPosition(0.5f, 0.5f, 0.5f);
+	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>(Mesh(FixPath(L"../../Assets/Models/sphere.obj").c_str(), context, device));
+	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[0])));
+	entityList[0]->GetTransform()->SetPosition(0.5f, 3.5f, 0.5f);
 
-	entityList.push_back(std::make_shared<Entity>(Entity(triangle, materialList[1])));
+	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[1])));
 	entityList[1]->GetTransform()->SetScale(0.5f, 0.5f, 0.5f);
+	entityList[1]->GetTransform()->SetPosition(2.0f, 0.0f, 0.0f);
 
-	entityList.push_back(std::make_shared<Entity>(Entity(triangle, materialList[2])));
+	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[2])));
 	entityList[2]->GetTransform()->SetRotation(0.0f, 0.0f, 0.5f);
-	entityList[2]->GetTransform()->SetPosition(-0.8f, 0.1f, 0.0f);
+	entityList[2]->GetTransform()->SetPosition(-2.0f, 0.1f, 0.0f);
 
-	entityList.push_back(std::make_shared<Entity>(Entity(misc, materialList[0])));
+	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[0])));
 	entityList[3]->GetTransform()->SetScale(2.0f, 1.0f, 0.5f);
-	entityList[3]->GetTransform()->SetPosition(0.0f, 0.5f, 0.0f);
+	entityList[3]->GetTransform()->SetPosition(3.0f, 0.5f, 0.0f);
 
-	entityList.push_back(std::make_shared<Entity>(Entity(square, materialList[1])));
+	entityList.push_back(std::make_shared<Entity>(Entity(cube, materialList[1])));
 	entityList[4]->GetTransform()->SetRotation(0.0f, 0.0f, 0.75f);
-	entityList[4]->GetTransform()->SetPosition(1.0f, -0.7f, 0.0f);
+	entityList[4]->GetTransform()->SetPosition(-3.0f, -0.7f, 0.0f);
 }
 
 
@@ -299,13 +302,13 @@ void Game::Update(float deltaTime, float totalTime)
 	ImGui::End();
 
 	//Update Geometery
-	
+	/*
 	entityList[0]->GetTransform()->Rotate(0.0f, 0.0f, 0.0001f);
 	entityList[0]->GetTransform()->MoveRelative(0.0001f, 0.0f, 0.0f);
 	entityList[2]->GetTransform()->MoveAbsolute((float)cos(totalTime), 0.0f, 0.0f);
 	entityList[3]->GetTransform()->MoveAbsolute(0.0f, -0.0001f, 0.0f);
 	entityList[3]->GetTransform()->Scale(1.0001f, 1.00002f, 1.0f);
-	
+	*/
 	currentCamera->Update(deltaTime);
 
 	// Example input checking: Quit if the escape key is pressed
