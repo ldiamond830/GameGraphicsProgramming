@@ -11,6 +11,7 @@
 #include <DirectXMath.h>
 #include "SimpleShader.h"
 #include "Material.h"
+#include "Light.h"
 class Game 
 	: public DXCore
 {
@@ -56,5 +57,8 @@ private:
 
 	DirectX::XMFLOAT4 colorTint = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	DirectX::XMFLOAT3 offset = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	DirectX::XMFLOAT3 ambientColor = DirectX::XMFLOAT3(0.1f, 0.1f, 0.25f);
+
+	Light directionalLight1;
 };
 

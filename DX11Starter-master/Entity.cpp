@@ -27,7 +27,7 @@ void Entity::SetMaterial(std::shared_ptr<Material> _material)
 	material = _material;
 }
 
-void Entity::Draw(DirectX::XMFLOAT4 _colorTint, Microsoft::WRL::ComPtr<ID3D11DeviceContext> context, std::shared_ptr<Camera> camera)
+void Entity::Draw(DirectX::XMFLOAT4 _colorTint, Microsoft::WRL::ComPtr<ID3D11DeviceContext> context, std::shared_ptr<Camera> camera, Light light)
 {
 	//VertexShaderExternalData vsData;
 	//vsData.colorTint = _colorTint;
@@ -48,11 +48,16 @@ void Entity::Draw(DirectX::XMFLOAT4 _colorTint, Microsoft::WRL::ComPtr<ID3D11Dev
 	material->GetPixelShader()->SetShader();
 	std::shared_ptr<SimpleVertexShader> vs = material->GetVertexShader();
 	std::shared_ptr<SimplePixelShader> ps = material->GetPixelShader();
-	ps->SetFloat4("colorTint", material->GetColorTint()); // Strings here MUST
-	vs->SetMatrix4x4("world", transform->GetWorldMatrix()); // match variable
-	vs->SetMatrix4x4("view", camera->GetView()); // names in your
-	vs->SetMatrix4x4("projection", camera->GetProjection()); // shader’s cbuffer!
+	ps->SetFloat3("colorTint", material->GetColorTint());
+	ps->SetFloat("roughness", material->GetRoughness());
+	ps->SetFloat3("cameraPosition", camera->GetTransform()->GetPosition());
+	ps->SetData("directionalLight1", &light, sizeof(Light));
 
+	vs->SetMatrix4x4("world", transform->GetWorldMatrix()); 
+	vs->SetMatrix4x4("worldInvTranspose", transform->GetWorldInverseTransposeMatrix());
+	vs->SetMatrix4x4("view", camera->GetView());
+	vs->SetMatrix4x4("projection", camera->GetProjection()); 
+	
 	vs->CopyAllBufferData();
 	ps->CopyAllBufferData();
 	mesh->Draw();

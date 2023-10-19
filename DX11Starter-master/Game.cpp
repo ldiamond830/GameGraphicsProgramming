@@ -69,9 +69,9 @@ void Game::Init()
 	//  - You'll be expanding and/or replacing these later
 	LoadShaders();
 
-	materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));
-	materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.25f, 1.0f), customPixelShader, vertexShader)));
-	materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));
+	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
+	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 0.0f, 0.25f), customPixelShader, vertexShader)));
+	//materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));
 	CreateGeometry();
 	
 	// Set initial graphics API state
@@ -117,6 +117,12 @@ void Game::Init()
 	cameraList.push_back(make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(5.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 20.0f, 0.0f), 45, 0.1f, 500.0f, 0.1f, 5.0f)));
 	cameraList.push_back(make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(0.0f, 1.0f, -0.5f), XMFLOAT3(0.0f, 20.0f, 0.0f), 10, 0.1f, 500.0f, 0.1f, 5.0f)));
 	currentCamera = cameraList[mainCameraIndex];
+
+	directionalLight1 = {};
+	directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight1.direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	directionalLight1.color = XMFLOAT3(1.0f, 0.0f, 0.2f);
+	directionalLight1.intensity = 1.0f;
 }
 
 // --------------------------------------------------------
@@ -208,22 +214,16 @@ void Game::CreateGeometry()
 	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>(Mesh(FixPath(L"../../Assets/Models/sphere.obj").c_str(), context, device));
 	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[0])));
 	entityList[0]->GetTransform()->SetPosition(0.5f, 3.5f, 0.5f);
-
-	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[1])));
-	entityList[1]->GetTransform()->SetScale(0.5f, 0.5f, 0.5f);
-	entityList[1]->GetTransform()->SetPosition(2.0f, 0.0f, 0.0f);
-
-	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[2])));
-	entityList[2]->GetTransform()->SetRotation(0.0f, 0.0f, 0.5f);
-	entityList[2]->GetTransform()->SetPosition(-2.0f, 0.1f, 0.0f);
+	
+	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[0])));
+	entityList[1]->GetTransform()->SetRotation(0.0f, 0.0f, 0.5f);
+	entityList[1]->GetTransform()->SetPosition(-2.0f, 0.1f, 0.0f);
 
 	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[0])));
-	entityList[3]->GetTransform()->SetScale(2.0f, 1.0f, 0.5f);
-	entityList[3]->GetTransform()->SetPosition(3.0f, 0.5f, 0.0f);
-
-	entityList.push_back(std::make_shared<Entity>(Entity(cube, materialList[1])));
-	entityList[4]->GetTransform()->SetRotation(0.0f, 0.0f, 0.75f);
-	entityList[4]->GetTransform()->SetPosition(-3.0f, -0.7f, 0.0f);
+	entityList[2]->GetTransform()->SetScale(2.0f, 1.0f, 0.5f);
+	entityList[2]->GetTransform()->SetPosition(3.0f, 0.5f, 0.0f);
+	
+	
 }
 
 
@@ -339,10 +339,9 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - These steps are generally repeated for EACH object you draw
 	// - Other Direct3D calls will also be necessary to do more complex things
 	for (int i = 0; i < entityList.size(); i++) {
-		entityList[i]->Draw(colorTint, context, currentCamera);
+		entityList[i]->GetMaterial()->GetPixelShader()->SetFloat3("ambient", ambientColor);
+		entityList[i]->Draw(colorTint, context, currentCamera, directionalLight1);
 	}
-
-	
 
 	// Frame END
 	// - These should happen exactly ONCE PER FRAME
