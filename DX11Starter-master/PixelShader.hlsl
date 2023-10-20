@@ -5,6 +5,10 @@ cbuffer colorTint : register(b0) {
 	float roughness;
 	float3 ambient;
 	Light directionalLight1;
+	Light directionalLight2;
+	Light directionalLight3;
+	Light pointLight1;
+	Light pointLight2;
 }
 
 
@@ -20,10 +24,15 @@ cbuffer colorTint : register(b0) {
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	input.normal = normalize(input.normal);
-	float3 directionToLight = normalize(directionalLight1.direction * -1);
-	float3 diffuseColor = Diffuse(input.normal, directionToLight) * directionalLight1.color;
-	float3 specularColor = Specular(cameraPosition, input.worldPosition, directionToLight * -1, input.normal, roughness) * directionalLight1.color;;
-	float3 finalColor = (colorTint * (diffuseColor + specularColor)) + (ambient * colorTint);
+
+		float3 sumDirectionalLights = DirectionalLight(directionalLight1, colorTint, input.normal, cameraPosition, input.worldPosition, roughness) +
+		DirectionalLight(directionalLight2, colorTint, input.normal, cameraPosition, input.worldPosition, roughness) +
+		DirectionalLight(directionalLight3, colorTint, input.normal, cameraPosition, input.worldPosition, roughness);
+
+		float3 sumPointLights = PointLight(pointLight1, colorTint, input.normal, cameraPosition, input.worldPosition, roughness) +
+			PointLight(pointLight2, colorTint, input.normal, cameraPosition, input.worldPosition, roughness);
+
+	float3 finalColor =  sumDirectionalLights + sumPointLights + (ambient * colorTint);
 
 	return float4(finalColor, 1.0f);
 }

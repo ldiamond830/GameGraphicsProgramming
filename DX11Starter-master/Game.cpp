@@ -123,6 +123,30 @@ void Game::Init()
 	directionalLight1.direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
 	directionalLight1.color = XMFLOAT3(1.0f, 0.0f, 0.2f);
 	directionalLight1.intensity = 1.0f;
+
+	directionalLight2 = {};
+	directionalLight2.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight2.direction = XMFLOAT3(-1.0f, 0.0f, 0.0f);
+	directionalLight2.color = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	directionalLight2.intensity = 1.0f;
+
+	directionalLight3 = {};
+	directionalLight3.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight3.direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	directionalLight3.color = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	directionalLight3.intensity = 1.0f;
+
+	pointLight1 = {};
+	pointLight1.type = LIGHT_TYPE_POINT;
+	pointLight1.position = XMFLOAT3(0.0f, -1.0f, 0.0f);
+	pointLight1.color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	pointLight1.intensity = 1.0f;
+
+	pointLight2 = {};
+	pointLight2.type = LIGHT_TYPE_POINT;
+	pointLight2.position = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	pointLight2.color = XMFLOAT3(1.0f, 1.0f, 0.0f);
+	pointLight2.intensity = 1.0f;
 }
 
 // --------------------------------------------------------
@@ -340,6 +364,10 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - Other Direct3D calls will also be necessary to do more complex things
 	for (int i = 0; i < entityList.size(); i++) {
 		entityList[i]->GetMaterial()->GetPixelShader()->SetFloat3("ambient", ambientColor);
+		entityList[i]->GetMaterial()->GetPixelShader()->SetData("directionalLight2", &directionalLight2, sizeof(Light));
+		entityList[i]->GetMaterial()->GetPixelShader()->SetData("directionalLight3", &directionalLight3, sizeof(Light));
+		entityList[i]->GetMaterial()->GetPixelShader()->SetData("pointLight1", &pointLight1, sizeof(Light));
+		entityList[i]->GetMaterial()->GetPixelShader()->SetData("pointLight2", &pointLight2, sizeof(Light));
 		entityList[i]->Draw(colorTint, context, currentCamera, directionalLight1);
 	}
 

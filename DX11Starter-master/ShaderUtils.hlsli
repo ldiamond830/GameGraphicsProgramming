@@ -52,7 +52,7 @@ struct Light
     float3 padding;
 };
 
-float3 Diffuse(float3 normal, float3 dirToLight)
+float Diffuse(float3 normal, float3 dirToLight)
 {
     return saturate(dot(normal, dirToLight));
 }
@@ -71,6 +71,23 @@ float Specular(float3 cameraPosition, float3 pixelWorldPosition, float3 incoming
     {
         return 0;
     }
+}
+
+float3 DirectionalLight(Light light, float3 surfaceColor, float3 normal, float3 cameraPosition, float3 pixelWorldPosition, float roughness)
+{
+    float diffuseColor = Diffuse(normal, normalize(light.direction * -1));
+    float specularColor = Specular(cameraPosition, pixelWorldPosition, light.direction, normal, roughness);
+    
+    return (surfaceColor * (diffuseColor + specularColor)) * light.intensity * light.color;
+}
+
+float3 PointLight(Light light, float3 surfaceColor, float3 normal, float3 cameraPosition, float3 pixelWorldPosition, float roughness)
+{
+    float3 direction = pixelWorldPosition - light.position;
+    float diffuseColor = Diffuse(normal, normalize(direction * -1));
+    float specularColor = Specular(cameraPosition, pixelWorldPosition, direction, normal, roughness);
+    
+    return (surfaceColor * (diffuseColor + specularColor)) * light.intensity * light.color;
 }
 
 #endif
