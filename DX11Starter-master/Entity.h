@@ -18,6 +18,6 @@ public:
 	std::shared_ptr<Transform> GetTransform();
 	std::shared_ptr<Material> GetMaterial();
 	void SetMaterial(std::shared_ptr <Material> _material);
-	void Draw(DirectX::XMFLOAT4 colorTint, Microsoft::WRL::ComPtr<ID3D11DeviceContext>	context, std::shared_ptr<Camera> camera, Light light);
+	void Draw(DirectX::XMFLOAT4 colorTint, Microsoft::WRL::ComPtr<ID3D11DeviceContext>	context, std::shared_ptr<Camera> camera);
 };
 

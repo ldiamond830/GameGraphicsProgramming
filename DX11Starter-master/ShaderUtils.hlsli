@@ -73,6 +73,13 @@ float Specular(float3 cameraPosition, float3 pixelWorldPosition, float3 incoming
     }
 }
 
+float Attenuate(Light light, float3 worldPos)
+{
+    float dist = distance(light.position, worldPos);
+    float att = saturate(1.0f - (dist * dist / (light.range * light.range)));
+    return att * att;
+}
+
 float3 DirectionalLight(Light light, float3 surfaceColor, float3 normal, float3 cameraPosition, float3 pixelWorldPosition, float roughness)
 {
     float diffuseColor = Diffuse(normal, normalize(light.direction * -1));
@@ -83,11 +90,11 @@ float3 DirectionalLight(Light light, float3 surfaceColor, float3 normal, float3 
 
 float3 PointLight(Light light, float3 surfaceColor, float3 normal, float3 cameraPosition, float3 pixelWorldPosition, float roughness)
 {
-    float3 direction = pixelWorldPosition - light.position;
+    float3 direction = normalize(pixelWorldPosition - light.position);
     float diffuseColor = Diffuse(normal, normalize(direction * -1));
     float specularColor = Specular(cameraPosition, pixelWorldPosition, direction, normal, roughness);
-    
-    return (surfaceColor * (diffuseColor + specularColor)) * light.intensity * light.color;
+    float attenuation = Attenuate(light, pixelWorldPosition);
+    return ((surfaceColor * (diffuseColor + specularColor)) * light.intensity * light.color) * attenuation;
 }
 
 #endif

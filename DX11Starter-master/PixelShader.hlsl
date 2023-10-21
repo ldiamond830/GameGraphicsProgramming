@@ -9,6 +9,7 @@ cbuffer colorTint : register(b0) {
 	Light directionalLight3;
 	Light pointLight1;
 	Light pointLight2;
+	Light lights[5];
 }
 
 
@@ -24,15 +25,26 @@ cbuffer colorTint : register(b0) {
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	input.normal = normalize(input.normal);
-
+	float3 lightSum = 0;
+	for (int i = 0; i < 5; i++) {
+		switch (lights[i].type) {
+		case LIGHT_TYPE_DIRECTIONAL:
+			lightSum += DirectionalLight(lights[i], colorTint, input.normal, cameraPosition, input.worldPosition, roughness);
+			break;
+		case LIGHT_TYPE_POINT:
+			lightSum += PointLight(lights[i], colorTint, input.normal, cameraPosition, input.worldPosition, roughness);
+			break;
+		}
+	}
+	/*
 		float3 sumDirectionalLights = DirectionalLight(directionalLight1, colorTint, input.normal, cameraPosition, input.worldPosition, roughness) +
 		DirectionalLight(directionalLight2, colorTint, input.normal, cameraPosition, input.worldPosition, roughness) +
 		DirectionalLight(directionalLight3, colorTint, input.normal, cameraPosition, input.worldPosition, roughness);
 
 		float3 sumPointLights = PointLight(pointLight1, colorTint, input.normal, cameraPosition, input.worldPosition, roughness) +
 			PointLight(pointLight2, colorTint, input.normal, cameraPosition, input.worldPosition, roughness);
-
-	float3 finalColor =  sumDirectionalLights + sumPointLights + (ambient * colorTint);
+			*/
+	float3 finalColor =  lightSum + (ambient * colorTint);
 
 	return float4(finalColor, 1.0f);
 }

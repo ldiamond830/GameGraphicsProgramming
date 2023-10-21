@@ -27,7 +27,7 @@ void Entity::SetMaterial(std::shared_ptr<Material> _material)
 	material = _material;
 }
 
-void Entity::Draw(DirectX::XMFLOAT4 _colorTint, Microsoft::WRL::ComPtr<ID3D11DeviceContext> context, std::shared_ptr<Camera> camera, Light light)
+void Entity::Draw(DirectX::XMFLOAT4 _colorTint, Microsoft::WRL::ComPtr<ID3D11DeviceContext> context, std::shared_ptr<Camera> camera)
 {
 	//VertexShaderExternalData vsData;
 	//vsData.colorTint = _colorTint;
@@ -51,7 +51,6 @@ void Entity::Draw(DirectX::XMFLOAT4 _colorTint, Microsoft::WRL::ComPtr<ID3D11Dev
 	ps->SetFloat3("colorTint", material->GetColorTint());
 	ps->SetFloat("roughness", material->GetRoughness());
 	ps->SetFloat3("cameraPosition", camera->GetTransform()->GetPosition());
-	ps->SetData("directionalLight1", &light, sizeof(Light));
 
 	vs->SetMatrix4x4("world", transform->GetWorldMatrix()); 
 	vs->SetMatrix4x4("worldInvTranspose", transform->GetWorldInverseTransposeMatrix());

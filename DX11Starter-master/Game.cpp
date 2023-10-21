@@ -10,7 +10,7 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #include <d3dcompiler.h>
 #include "Entity.h"
-
+#include <iostream>
 // For the DirectX Math library
 using namespace DirectX;
 using namespace std;
@@ -118,17 +118,17 @@ void Game::Init()
 	cameraList.push_back(make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(0.0f, 1.0f, -0.5f), XMFLOAT3(0.0f, 20.0f, 0.0f), 10, 0.1f, 500.0f, 0.1f, 5.0f)));
 	currentCamera = cameraList[mainCameraIndex];
 
-	directionalLight1 = {};
-	directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight1.direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	directionalLight1.color = XMFLOAT3(1.0f, 0.0f, 0.2f);
-	directionalLight1.intensity = 1.0f;
+	directionalLight1 = new Light();
+	directionalLight1->type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight1->direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	directionalLight1->color = XMFLOAT3(1.0f, 0.0f, 0.2f);
+	directionalLight1->intensity = 1.0f;
 
 	directionalLight2 = {};
 	directionalLight2.type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight2.direction = XMFLOAT3(-1.0f, 0.0f, 0.0f);
 	directionalLight2.color = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	directionalLight2.intensity = 1.0f;
+	directionalLight2.intensity = 0.0f;
 
 	directionalLight3 = {};
 	directionalLight3.type = LIGHT_TYPE_DIRECTIONAL;
@@ -141,12 +141,21 @@ void Game::Init()
 	pointLight1.position = XMFLOAT3(0.0f, -1.0f, 0.0f);
 	pointLight1.color = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	pointLight1.intensity = 1.0f;
+	pointLight1.range = 5.0f;
 
 	pointLight2 = {};
 	pointLight2.type = LIGHT_TYPE_POINT;
 	pointLight2.position = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	pointLight2.color = XMFLOAT3(1.0f, 1.0f, 0.0f);
 	pointLight2.intensity = 1.0f;
+	pointLight2.range = 10.0f;
+
+	//lights.push_back(directionalLight1);
+	lights.push_back(directionalLight2);
+	lights.push_back(directionalLight2);
+	lights.push_back(directionalLight3);
+	lights.push_back(pointLight1);
+	lights.push_back(pointLight2);
 }
 
 // --------------------------------------------------------
@@ -287,7 +296,7 @@ void Game::Update(float deltaTime, float totalTime)
 	// Show the demo window
 	//ImGui::ShowDemoWindow();
 
-	ImGui::Begin("Assignment 3");
+	ImGui::Begin("Assignment 7");
 	ImGui::Text("Framerate %f", ImGui::GetIO().Framerate);
 	ImGui::Text("Width: %i", windowWidth);
 	ImGui::Text("Height: %i", windowHeight);
@@ -299,8 +308,27 @@ void Game::Update(float deltaTime, float totalTime)
 	ImGui::Text("Camera Position %f %f %f", currentCamera->GetTransform()->GetPosition().x, currentCamera->GetTransform()->GetPosition().y, currentCamera->GetTransform()->GetPosition().z);
 	ImGui::Text("Camera fov: %f", currentCamera->GetFov());
 	ImGui::Text("Camera speed %f", currentCamera->GetMoveSpeed());
-	//sliders for tint and offset;
-	ImGui::ColorEdit4("Tint", &colorTint.x);
+	
+	ImGui::Text("Directional Light 1");
+	ImGui::DragFloat("Intensity##DL1", &directionalLight1->intensity);
+	ImGui::ColorEdit3("Color##DL1", &directionalLight1->color.x);
+
+	ImGui::Text("Directional Light 2");
+	ImGui::DragFloat("Intensity##DL2", &directionalLight2.intensity);
+	ImGui::ColorEdit3("Color##DL2", &directionalLight2.color.x);
+
+	ImGui::Text("Directional Light 3");
+	ImGui::DragFloat("Intensity##DL3", &directionalLight3.intensity);
+	ImGui::ColorEdit3("Color##DL3", &directionalLight3.color.x);
+
+	ImGui::Text("Point Light 1");
+	ImGui::DragFloat("Intensity##PL1", &pointLight1.intensity);
+	ImGui::ColorEdit3("Color##PL1", &pointLight1.color.x);
+
+	ImGui::Text("Point Light 2");
+	ImGui::DragFloat("Intensity##PL2", &pointLight2.intensity);
+	ImGui::ColorEdit3("Color##PL2", &pointLight2.color.x);
+
 	for (int i = 0; i < entityList.size(); i++) {
 		ImGui::PushID(i);
 		ImGui::Text("Entity %i", i);
@@ -364,11 +392,13 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - Other Direct3D calls will also be necessary to do more complex things
 	for (int i = 0; i < entityList.size(); i++) {
 		entityList[i]->GetMaterial()->GetPixelShader()->SetFloat3("ambient", ambientColor);
+		entityList[i]->GetMaterial()->GetPixelShader()->SetData("directionalLight1", directionalLight1, sizeof(Light));
 		entityList[i]->GetMaterial()->GetPixelShader()->SetData("directionalLight2", &directionalLight2, sizeof(Light));
 		entityList[i]->GetMaterial()->GetPixelShader()->SetData("directionalLight3", &directionalLight3, sizeof(Light));
 		entityList[i]->GetMaterial()->GetPixelShader()->SetData("pointLight1", &pointLight1, sizeof(Light));
 		entityList[i]->GetMaterial()->GetPixelShader()->SetData("pointLight2", &pointLight2, sizeof(Light));
-		entityList[i]->Draw(colorTint, context, currentCamera, directionalLight1);
+		entityList[i]->GetMaterial()->GetPixelShader()->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
+		entityList[i]->Draw(colorTint, context, currentCamera);
 	}
 
 	// Frame END
