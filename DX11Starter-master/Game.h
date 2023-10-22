@@ -59,12 +59,12 @@ private:
 	DirectX::XMFLOAT3 offset = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	DirectX::XMFLOAT3 ambientColor = DirectX::XMFLOAT3(0.1f, 0.1f, 0.25f);
 
-	Light* directionalLight1;
-	Light directionalLight2;
-	Light directionalLight3;
+	Light directionalLight1 = {};
+	Light directionalLight2 = {};
+	Light directionalLight3 = {};
 
-	Light pointLight1;
-	Light pointLight2;
+	Light pointLight1 = {};
+	Light pointLight2 = {};
 
 	std::vector<Light> lights;
 };
