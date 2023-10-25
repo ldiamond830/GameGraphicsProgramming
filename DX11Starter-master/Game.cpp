@@ -11,6 +11,7 @@
 #include <d3dcompiler.h>
 #include "Entity.h"
 #include <iostream>
+#include <WICTextureLoader.h>
 // For the DirectX Math library
 using namespace DirectX;
 using namespace std;
@@ -68,7 +69,21 @@ void Game::Init()
 	// geometry to draw and some simple camera matrices.
 	//  - You'll be expanding and/or replacing these later
 	LoadShaders();
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
+	D3D11_SAMPLER_DESC samplerDescription = {};
+	samplerDescription.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDescription.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDescription.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDescription.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDescription.MaxLOD = D3D11_FLOAT32_MAX;
+	device->CreateSamplerState(&samplerDescription, samplerState.GetAddressOf());
 
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> marbleTextureResouce;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> brickTextureResouce;
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/Marble.png").c_str(), nullptr, marbleTextureResouce.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/Bricks.png").c_str(), nullptr, brickTextureResouce.GetAddressOf());
+
+	
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 0.0f, 0.25f), customPixelShader, vertexShader)));
 	//materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));

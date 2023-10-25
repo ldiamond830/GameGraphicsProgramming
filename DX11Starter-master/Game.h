@@ -67,5 +67,7 @@ private:
 	Light pointLight2 = {};
 
 	std::vector<Light> lights;
+
+	
 };
 
