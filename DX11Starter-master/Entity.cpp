@@ -51,6 +51,8 @@ void Entity::Draw(DirectX::XMFLOAT4 _colorTint, Microsoft::WRL::ComPtr<ID3D11Dev
 	ps->SetFloat3("colorTint", material->GetColorTint());
 	ps->SetFloat("roughness", material->GetRoughness());
 	ps->SetFloat3("cameraPosition", camera->GetTransform()->GetPosition());
+	for (auto& t : material->GetSRVs()) { ps->SetShaderResourceView(t.first.c_str(), t.second); }
+	for (auto& s : material->GetSamplers()) { ps->SetSamplerState(s.first.c_str(), s.second); }
 
 	vs->SetMatrix4x4("world", transform->GetWorldMatrix()); 
 	vs->SetMatrix4x4("worldInvTranspose", transform->GetWorldInverseTransposeMatrix());

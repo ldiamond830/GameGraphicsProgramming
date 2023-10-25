@@ -1,5 +1,5 @@
 #include "Material.h"
-
+#include <string>
 Material::Material(DirectX::XMFLOAT3 _colorTint, std::shared_ptr<SimplePixelShader> _pixelShader, std::shared_ptr<SimpleVertexShader> _vertexShader)
 {
     colorTint = _colorTint;
@@ -40,4 +40,24 @@ std::shared_ptr<SimpleVertexShader> Material::GetVertexShader()
 float Material::GetRoughness()
 {
     return roughness;
+}
+
+void Material::AddTextureSRV(std::string name, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shaderResourceView)
+{
+    textureSRVs.insert({ name, shaderResourceView });
+}
+
+void Material::AddSample(std::string name, Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler)
+{
+    samplers.insert({ name, sampler });
+}
+
+std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D11SamplerState>> Material::GetSamplers()
+{
+    return samplers;
+}
+
+std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> Material::GetSRVs()
+{
+    return textureSRVs;
 }

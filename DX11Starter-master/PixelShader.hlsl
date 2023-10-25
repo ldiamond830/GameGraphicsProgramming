@@ -1,4 +1,8 @@
 #include "ShaderUtils.hlsli"
+
+Texture2D SurfaceTexture : register(t0); // "t" registers for textures
+SamplerState BasicSampler : register(s0); // "s" registers for sampler
+
 cbuffer colorTint : register(b0) {
 	float3 colorTint;
 	float3 cameraPosition;
@@ -25,14 +29,18 @@ cbuffer colorTint : register(b0) {
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	input.normal = normalize(input.normal);
+
+	float3 surfaceColor = SurfaceTexture.Sample(BasicSampler, input.uv).rgb;
+	surfaceColor *= colorTint;
+
 	float3 lightSum = 0;
 	for (int i = 0; i < 5; i++) {
 		switch (lights[i].type) {
 		case LIGHT_TYPE_DIRECTIONAL:
-			lightSum += DirectionalLight(lights[i], colorTint, input.normal, cameraPosition, input.worldPosition, roughness);
+			lightSum += DirectionalLight(lights[i], surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness);
 			break;
 		case LIGHT_TYPE_POINT:
-			lightSum += PointLight(lights[i], colorTint, input.normal, cameraPosition, input.worldPosition, roughness);
+			lightSum += PointLight(lights[i], surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness);
 			break;
 		}
 	}
@@ -44,7 +52,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 		float3 sumPointLights = PointLight(pointLight1, colorTint, input.normal, cameraPosition, input.worldPosition, roughness) +
 			PointLight(pointLight2, colorTint, input.normal, cameraPosition, input.worldPosition, roughness);
 			*/
-	float3 finalColor =  lightSum + (ambient * colorTint);
+	float3 finalColor =  lightSum + (ambient * surfaceColor);
 
 	return float4(finalColor, 1.0f);
 }

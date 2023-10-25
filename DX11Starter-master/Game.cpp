@@ -80,12 +80,17 @@ void Game::Init()
 
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> marbleTextureResouce;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> brickTextureResouce;
-	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/Marble.png").c_str(), nullptr, marbleTextureResouce.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/Bricks.png").c_str(), nullptr, brickTextureResouce.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/marble.png").c_str(), nullptr, marbleTextureResouce.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/brick.png").c_str(), nullptr, brickTextureResouce.GetAddressOf());
 
 	
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
-	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 0.0f, 0.25f), customPixelShader, vertexShader)));
+	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
+	materialList[0]->AddTextureSRV("SurfaceTexture", marbleTextureResouce);
+	materialList[0]->AddSample("BasicSampler", samplerState);
+	materialList[1]->AddTextureSRV("SurfaceTexture", brickTextureResouce);
+	materialList[1]->AddSample("BasicSampler", samplerState);
+
 	//materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));
 	CreateGeometry();
 	
@@ -255,7 +260,7 @@ void Game::CreateGeometry()
 	};
 	UINT miscIndices[] = { 0,1,2,1,3,4,5,3,6};
 	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>(Mesh(FixPath(L"../../Assets/Models/sphere.obj").c_str(), context, device));
-	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[0])));
+	entityList.push_back(std::make_shared<Entity>(Entity(cube, materialList[1])));
 	entityList[0]->GetTransform()->SetPosition(0.5f, 3.5f, 0.5f);
 	
 	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[0])));
@@ -263,7 +268,7 @@ void Game::CreateGeometry()
 	entityList[1]->GetTransform()->SetPosition(-2.0f, 0.1f, 0.0f);
 
 	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[0])));
-	entityList[2]->GetTransform()->SetScale(2.0f, 1.0f, 0.5f);
+	//entityList[2]->GetTransform()->SetScale(2.0f, 1.0f, 0.5f);
 	entityList[2]->GetTransform()->SetPosition(3.0f, 0.5f, 0.0f);
 	
 	
