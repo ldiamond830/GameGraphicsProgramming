@@ -1,0 +1,1 @@
+the extra feature I added was the ability to scale and offset the texture using variables stored in the material and then sent to the shader
