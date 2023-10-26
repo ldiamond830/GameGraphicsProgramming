@@ -88,6 +88,8 @@ void Game::Init()
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
 	materialList[0]->AddTextureSRV("SurfaceTexture", marbleTextureResouce);
 	materialList[0]->AddSample("BasicSampler", samplerState);
+	materialList[1]->SetTetxureOffset(0.1f);
+	materialList[1]->SetTextureScale(5);
 	materialList[1]->AddTextureSRV("SurfaceTexture", brickTextureResouce);
 	materialList[1]->AddSample("BasicSampler", samplerState);
 

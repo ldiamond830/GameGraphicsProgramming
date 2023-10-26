@@ -13,6 +13,8 @@ private:
 	std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> textureSRVs;
 	std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D11SamplerState>> samplers;
 	float roughness;
+	float textureScale;
+	float textureOffset;
 public:
 	Material(DirectX::XMFLOAT3 _colorTint, std::shared_ptr<SimplePixelShader> _pixelShader, std::shared_ptr<SimpleVertexShader> _vertexShader);
 
@@ -29,6 +31,9 @@ public:
 	void AddSample(std::string name, Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler);
 	std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D11SamplerState>> GetSamplers();
 	std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> GetSRVs();
-	
+	void SetTextureScale(float newScale);
+	void SetTetxureOffset(float newOffset);
+	float GetTextureScale();
+	float GetTextureOffset();
 };
 

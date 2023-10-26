@@ -5,7 +5,9 @@ Material::Material(DirectX::XMFLOAT3 _colorTint, std::shared_ptr<SimplePixelShad
     colorTint = _colorTint;
     pixelShader = _pixelShader;
     vertexShader = _vertexShader;
-    roughness = 0.5f; // temp
+    roughness = 0.5f;
+    textureScale = 1.0f;
+    textureOffset = 0.0f;
 }
 
 void Material::SetColorTint(DirectX::XMFLOAT3 newTint)
@@ -60,4 +62,24 @@ std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D11SamplerState>> Mate
 std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> Material::GetSRVs()
 {
     return textureSRVs;
+}
+
+void Material::SetTextureScale(float newScale)
+{
+    textureScale = newScale;
+}
+
+void Material::SetTetxureOffset(float newOffset)
+{
+    textureOffset = newOffset;
+}
+
+float Material::GetTextureScale()
+{
+    return textureScale;
+}
+
+float Material::GetTextureOffset()
+{
+    return textureOffset;
 }

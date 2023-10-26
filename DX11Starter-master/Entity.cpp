@@ -48,11 +48,15 @@ void Entity::Draw(DirectX::XMFLOAT4 _colorTint, Microsoft::WRL::ComPtr<ID3D11Dev
 	material->GetPixelShader()->SetShader();
 	std::shared_ptr<SimpleVertexShader> vs = material->GetVertexShader();
 	std::shared_ptr<SimplePixelShader> ps = material->GetPixelShader();
+
 	ps->SetFloat3("colorTint", material->GetColorTint());
 	ps->SetFloat("roughness", material->GetRoughness());
 	ps->SetFloat3("cameraPosition", camera->GetTransform()->GetPosition());
 	for (auto& t : material->GetSRVs()) { ps->SetShaderResourceView(t.first.c_str(), t.second); }
 	for (auto& s : material->GetSamplers()) { ps->SetSamplerState(s.first.c_str(), s.second); }
+	ps->SetFloat("textureScale", material->GetTextureScale());
+	ps->SetFloat("textureOffset", material->GetTextureOffset());
+
 
 	vs->SetMatrix4x4("world", transform->GetWorldMatrix()); 
 	vs->SetMatrix4x4("worldInvTranspose", transform->GetWorldInverseTransposeMatrix());

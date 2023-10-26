@@ -3,7 +3,7 @@
 Texture2D SurfaceTexture : register(t0); // "t" registers for textures
 SamplerState BasicSampler : register(s0); // "s" registers for sampler
 
-cbuffer colorTint : register(b0) {
+cbuffer buffer : register(b0) {
 	float3 colorTint;
 	float3 cameraPosition;
 	float roughness;
@@ -14,6 +14,8 @@ cbuffer colorTint : register(b0) {
 	Light pointLight1;
 	Light pointLight2;
 	Light lights[5];
+	float textureScale;
+	float textureOffset;
 }
 
 
@@ -30,7 +32,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 {
 	input.normal = normalize(input.normal);
 
-	float3 surfaceColor = SurfaceTexture.Sample(BasicSampler, input.uv).rgb;
+	float3 surfaceColor = SurfaceTexture.Sample(BasicSampler, (input.uv + textureOffset) * textureScale).rgb;
 	surfaceColor *= colorTint;
 
 	float3 lightSum = 0;
