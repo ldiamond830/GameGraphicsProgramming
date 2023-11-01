@@ -90,11 +90,11 @@ void Camera::Update(float dt)
 
 		XMFLOAT3 rotation = transform->GetPitchYawRoll();
 
-		if (rotation.x > XM_1DIV2PI) {
-			rotation.x = XM_1DIV2PI;
+		if (rotation.x > XM_PIDIV2 - 0.1f) {
+			rotation.x = XM_PIDIV2 - 0.1f;
 		}
-		else if (rotation.x < -XM_1DIV2PI) {
-			rotation.x = -XM_1DIV2PI;
+		else if (rotation.x < -XM_PIDIV2 + 0.1f) {
+			rotation.x = -XM_PIDIV2 + 0.1f;
 		}
 
 		transform->SetRotation(rotation);

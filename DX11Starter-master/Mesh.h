@@ -12,6 +12,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> drawCommandPtr;
 	UINT numIndices;
 	UINT numVertices;
+	void CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices, int numIndices);
 
 public:
 	Mesh(Vertex* vertices, int numVertices, unsigned int* indices, int numIndeces, Microsoft::WRL::ComPtr<ID3D11DeviceContext> drawCommandPtr, Microsoft::WRL::ComPtr <ID3D11Device> bufferCreator);
@@ -21,7 +22,5 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> GetIndexBuffer();
 	int GetIndexCount();
 	void Draw();
-
-
 };
 
