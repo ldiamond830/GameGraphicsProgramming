@@ -23,6 +23,20 @@ struct VertexToPixel
     float3 worldPosition	: POSITION;
 };
 
+struct VertexToPixelNormalMap
+{
+	// Data type
+	//  |
+	//  |   Name          Semantic
+	//  |    |                |
+	//  v    v                v
+    float4 screenPosition : SV_POSITION;
+    float2 uv : TEXCOORD;
+    float3 normal : NORMAL;
+    float3 worldPosition : POSITION;
+    float3 tangent : TANGENT;
+};
+
 // Struct representing a single vertex worth of data
 // - This should match the vertex definition in our C++ code
 // - By "match", I mean the size, order and number of members
