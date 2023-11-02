@@ -29,7 +29,17 @@ cbuffer ExternalData : register(b0)
 }
 
 
-float4 main(VertexShaderInput input) : SV_POSITION
+VertexToPixel main(VertexShaderInput input) : SV_POSITION
 {
+	VertexToPixel output;
+
+	matrix viewNoTranslation = view;
+	viewNoTranslation._14 = 0;
+	viewNoTranslation._24 = 0;
+	viewNoTranslation._34 = 0;
+
+	matrix viewProjection = mul(projection, viewNoTranslation);
+	output.screenPosition = mul(input.localPosition, viewProjection);
+
 	return input.localPosition;
 }
