@@ -80,12 +80,21 @@ void Game::Init()
 
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> marbleTextureResouce;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> brickTextureResouce;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleStoneTextureResouce;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleStoneNormalResouce;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockTextureResouce;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockNormalResouce;
+
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/marble.png").c_str(), nullptr, marbleTextureResouce.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/brick.png").c_str(), nullptr, brickTextureResouce.GetAddressOf());
-
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/cobblestone.png").c_str(), nullptr, cobbleStoneTextureResouce.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/cobblestone_normals.png").c_str(), nullptr, cobbleStoneNormalResouce.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/rock.png").c_str(), nullptr, rockTextureResouce.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/rock_normals.png").c_str(), nullptr, rockNormalResouce.GetAddressOf());
 	
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
+
 	materialList[0]->AddTextureSRV("SurfaceTexture", marbleTextureResouce);
 	materialList[0]->AddSample("BasicSampler", samplerState);
 	materialList[1]->SetTetxureOffset(0.1f);
@@ -94,8 +103,14 @@ void Game::Init()
 	materialList[1]->AddSample("BasicSampler", samplerState);
 
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), normalMapPixelShader, normalMapVertexShader)));
-	materialList[2]->AddTextureSRV("SurfaceTexture", marbleTextureResouce);
+	materialList[2]->AddTextureSRV("SurfaceTexture", cobbleStoneTextureResouce);
+	materialList[2]->AddTextureSRV("NormalMap", cobbleStoneNormalResouce);
 	materialList[2]->AddSample("BasicSampler", samplerState);
+
+	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), normalMapPixelShader, normalMapVertexShader)));
+	materialList[3]->AddTextureSRV("SurfaceTexture", rockTextureResouce);
+	materialList[3]->AddTextureSRV("NormalMap", rockNormalResouce);
+	materialList[3]->AddSample("BasicSampler", samplerState);
 
 	//materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));
 	CreateGeometry();
@@ -280,6 +295,10 @@ void Game::CreateGeometry()
 	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[0])));
 	//entityList[2]->GetTransform()->SetScale(2.0f, 1.0f, 0.5f);
 	entityList[2]->GetTransform()->SetPosition(3.0f, 0.5f, 0.0f);
+
+
+	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[3])));
+	entityList[3]->GetTransform()->SetPosition(7.0f, 0.5f, 0.0f);
 	
 	
 }

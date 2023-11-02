@@ -111,5 +111,10 @@ float3 PointLight(Light light, float3 surfaceColor, float3 normal, float3 camera
     float attenuation = Attenuate(light, pixelWorldPosition);
     return ((surfaceColor * (diffuseColor + specularColor)) * light.intensity * light.color) * attenuation;
 }
-
+/*
+float3 CalcAllLights(Light[5] lights)
+{
+    
+}
+*/
 #endif

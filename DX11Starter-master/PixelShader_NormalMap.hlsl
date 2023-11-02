@@ -46,7 +46,6 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 	float3x3 TBN = float3x3(T, B, N);
 
 	input.normal = mul(unpackedNormal, TBN);
-	return float4(T, 1.0f);
 	float3 lightSum = 0;
 	for (int i = 0; i < 5; i++) {
 		switch (lights[i].type) {
