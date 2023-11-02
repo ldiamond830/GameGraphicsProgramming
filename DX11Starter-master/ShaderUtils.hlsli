@@ -99,7 +99,8 @@ float3 DirectionalLight(Light light, float3 surfaceColor, float3 normal, float3 
 {
     float diffuseColor = Diffuse(normal, normalize(light.direction * -1));
     float specularColor = Specular(cameraPosition, pixelWorldPosition, light.direction, normal, roughness);
-    
+    //cuts specular when diffuse color is 0
+    specularColor *= any(diffuseColor);
     return (surfaceColor * (diffuseColor + specularColor)) * light.intensity * light.color;
 }
 
@@ -108,13 +109,29 @@ float3 PointLight(Light light, float3 surfaceColor, float3 normal, float3 camera
     float3 direction = normalize(pixelWorldPosition - light.position);
     float diffuseColor = Diffuse(normal, normalize(direction * -1));
     float specularColor = Specular(cameraPosition, pixelWorldPosition, direction, normal, roughness);
+    //cuts specular when diffuse color is 0
+    specularColor *= any(diffuseColor);
     float attenuation = Attenuate(light, pixelWorldPosition);
     return ((surfaceColor * (diffuseColor + specularColor)) * light.intensity * light.color) * attenuation;
 }
-/*
-float3 CalcAllLights(Light[5] lights)
+
+float3 CalcAllLights(Light lights[5], float3 surfaceColor, float3 normal, float3 cameraPosition, float3 worldPosition, float roughness)
 {
+    float3 lightSum = 0;
+    for (int i = 0; i < 5; i++)
+    {
+        switch (lights[i].type)
+        {
+            case LIGHT_TYPE_DIRECTIONAL:
+                lightSum += DirectionalLight(lights[i], surfaceColor, normal, cameraPosition, worldPosition, roughness);
+                break;
+            case LIGHT_TYPE_POINT:
+                lightSum += PointLight(lights[i], surfaceColor, normal, cameraPosition, worldPosition, roughness);
+                break;
+        }
+    }
     
+    return lightSum;
 }
-*/
+
 #endif

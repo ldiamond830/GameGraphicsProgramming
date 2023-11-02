@@ -162,13 +162,13 @@ void Game::Init()
 
 	directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight1.direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	directionalLight1.color = XMFLOAT3(1.0f, 0.0f, 0.2f);
-	directionalLight1.intensity = 1.0f;
+	directionalLight1.color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	directionalLight1.intensity = 0.5f;
 
 	directionalLight2.type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight2.direction = XMFLOAT3(-1.0f, 0.0f, 0.0f);
-	directionalLight2.color = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	directionalLight2.intensity = 0.0f;
+	directionalLight2.color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	directionalLight2.intensity = 0.75f;
 
 	directionalLight3.type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight3.direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
