@@ -46,7 +46,9 @@ private:
 	// Shaders and shader-related constructs
 	std::shared_ptr<SimplePixelShader> defaultPixelShader;
 	std::shared_ptr<SimplePixelShader> customPixelShader;
+	std::shared_ptr<SimplePixelShader> normalMapPixelShader;
 	std::shared_ptr<SimpleVertexShader> vertexShader;
+	std::shared_ptr<SimpleVertexShader> normalMapVertexShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 
 	std::vector<std::shared_ptr<Entity>> entityList;

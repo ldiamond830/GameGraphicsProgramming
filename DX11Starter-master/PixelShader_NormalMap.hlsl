@@ -29,7 +29,7 @@ cbuffer buffer : register(b0) {
 //    "put the output of this into the current render target"
 // - Named "main" because that's the default the shader compiler looks for
 // --------------------------------------------------------
-float4 main(VertexToPixel input) : SV_TARGET
+float4 main(VertexToPixelNormalMap input) : SV_TARGET
 {
 	
 
@@ -43,10 +43,10 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 T = normalize(input.tangent); // Must be normalized here or before
 	T = normalize(T - N * dot(T, N)); // Gram-Schmidt assumes T&N are normalized!
 	float3 B = cross(T, N);
-	float3x3 TBN = float3x3(T, B, N)
+	float3x3 TBN = float3x3(T, B, N);
 
 	input.normal = mul(unpackedNormal, TBN);
-
+	return float4(T, 1.0f);
 	float3 lightSum = 0;
 	for (int i = 0; i < 5; i++) {
 		switch (lights[i].type) {

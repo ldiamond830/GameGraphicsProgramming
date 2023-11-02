@@ -33,7 +33,7 @@ VertexToPixelNormalMap main(VertexShaderInput input)
 	output.uv = input.uv;
 	output.normal = mul((float3x3)worldInvTranspose, input.normal);
 	output.worldPosition = mul(world, float4(input.localPosition, 1)).xyz;
-	output.tangent = mul((float3x3)world, input.tangent)
+	output.tangent = mul((float3x3)world, input.tangent);
 	// Pass the color through 
 	// - The values will be interpolated per-pixel by the rasterizer
 	// - We don't need to alter it here, but we do need to send it to the pixel shader

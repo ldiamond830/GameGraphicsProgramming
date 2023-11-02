@@ -93,6 +93,10 @@ void Game::Init()
 	materialList[1]->AddTextureSRV("SurfaceTexture", brickTextureResouce);
 	materialList[1]->AddSample("BasicSampler", samplerState);
 
+	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), normalMapPixelShader, normalMapVertexShader)));
+	materialList[2]->AddTextureSRV("SurfaceTexture", marbleTextureResouce);
+	materialList[2]->AddSample("BasicSampler", samplerState);
+
 	//materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));
 	CreateGeometry();
 	
@@ -135,7 +139,7 @@ void Game::Init()
 	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
 
 	
-	cameraList.push_back(make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(0.0f, 0.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), 45, 0.1f, 500.0f, 0.1f, 5.0f)));
+	cameraList.push_back(make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(0.0f, 0.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), 45, 0.1f, 500.0f, 0.01f, 5.0f)));
 	cameraList.push_back(make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(5.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 20.0f, 0.0f), 45, 0.1f, 500.0f, 0.1f, 5.0f)));
 	cameraList.push_back(make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(0.0f, 1.0f, -0.5f), XMFLOAT3(0.0f, 20.0f, 0.0f), 10, 0.1f, 500.0f, 0.1f, 5.0f)));
 	currentCamera = cameraList[mainCameraIndex];
@@ -187,10 +191,14 @@ void Game::LoadShaders()
 {
 	vertexShader = std::make_shared<SimpleVertexShader>(device, context,
 		FixPath(L"VertexShader.cso").c_str());
+	normalMapVertexShader = std::make_shared<SimpleVertexShader>(device, context,
+		FixPath(L"VertexShader_NormalMap.cso").c_str());
 	defaultPixelShader = std::make_shared<SimplePixelShader>(device, context,
 		FixPath(L"PixelShader.cso").c_str());
 	customPixelShader = std::make_shared<SimplePixelShader>(device, context,
 		FixPath(L"CustomPS.cso").c_str());
+	normalMapPixelShader = std::make_shared<SimplePixelShader>(device, context,
+		FixPath(L"PixelShader_NormalMap.cso").c_str());
 }
 
 
@@ -262,7 +270,7 @@ void Game::CreateGeometry()
 	};
 	UINT miscIndices[] = { 0,1,2,1,3,4,5,3,6};
 	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>(Mesh(FixPath(L"../../Assets/Models/sphere.obj").c_str(), context, device));
-	entityList.push_back(std::make_shared<Entity>(Entity(cube, materialList[1])));
+	entityList.push_back(std::make_shared<Entity>(Entity(cube, materialList[2])));
 	entityList[0]->GetTransform()->SetPosition(0.5f, 3.5f, 0.5f);
 	
 	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[0])));
