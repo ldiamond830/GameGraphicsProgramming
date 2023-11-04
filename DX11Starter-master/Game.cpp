@@ -69,7 +69,7 @@ void Game::Init()
 	// geometry to draw and some simple camera matrices.
 	//  - You'll be expanding and/or replacing these later
 	LoadShaders();
-	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
+	
 	D3D11_SAMPLER_DESC samplerDescription = {};
 	samplerDescription.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDescription.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -111,6 +111,8 @@ void Game::Init()
 	materialList[3]->AddTextureSRV("SurfaceTexture", rockTextureResouce);
 	materialList[3]->AddTextureSRV("NormalMap", rockNormalResouce);
 	materialList[3]->AddSample("BasicSampler", samplerState);
+
+	
 
 	//materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));
 	CreateGeometry();
@@ -214,6 +216,10 @@ void Game::LoadShaders()
 		FixPath(L"CustomPS.cso").c_str());
 	normalMapPixelShader = std::make_shared<SimplePixelShader>(device, context,
 		FixPath(L"PixelShader_NormalMap.cso").c_str());
+	skyVertexShader = std::make_shared<SimpleVertexShader>(device, context,
+		FixPath(L"SkyVertexShader.cso").c_str());
+	skyPixelShader = std::make_shared<SimplePixelShader>(device, context,
+		FixPath(L"SkyPixelShader.cso").c_str());
 }
 
 
@@ -299,8 +305,11 @@ void Game::CreateGeometry()
 
 	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[3])));
 	entityList[3]->GetTransform()->SetPosition(7.0f, 0.5f, 0.0f);
+
+
 	
-	
+	skyBox = make_shared<Sky>(Sky(cube, samplerState, device, context, skyPixelShader, skyVertexShader, FixPath(L"../../Assets/Textures/marble.png").c_str(), FixPath(L"../../Assets/Textures/marble.png").c_str(),
+		FixPath(L"../../Assets/Textures/marble.png").c_str(), FixPath(L"../../Assets/Textures/marble.png").c_str(), FixPath(L"../../Assets/Textures/marble.png").c_str(), FixPath(L"../../Assets/Textures/marble.png").c_str()));
 }
 
 
@@ -427,6 +436,8 @@ void Game::Draw(float deltaTime, float totalTime)
 		entityList[i]->GetMaterial()->GetPixelShader()->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
 		entityList[i]->Draw(colorTint, context, currentCamera);
 	}
+
+	skyBox->Draw(context, currentCamera);
 
 	// Frame END
 	// - These should happen exactly ONCE PER FRAME

@@ -12,6 +12,8 @@
 #include "SimpleShader.h"
 #include "Material.h"
 #include "Light.h"
+#include "Sky.h";
+
 class Game 
 	: public DXCore
 {
@@ -47,8 +49,11 @@ private:
 	std::shared_ptr<SimplePixelShader> defaultPixelShader;
 	std::shared_ptr<SimplePixelShader> customPixelShader;
 	std::shared_ptr<SimplePixelShader> normalMapPixelShader;
+	std::shared_ptr<SimplePixelShader> skyPixelShader;
 	std::shared_ptr<SimpleVertexShader> vertexShader;
 	std::shared_ptr<SimpleVertexShader> normalMapVertexShader;
+	std::shared_ptr<SimpleVertexShader> skyVertexShader;
+
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 
 	std::vector<std::shared_ptr<Entity>> entityList;
@@ -69,7 +74,7 @@ private:
 	Light pointLight2 = {};
 
 	std::vector<Light> lights;
-
-	
+	std::shared_ptr <Sky> skyBox;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
 };
 
