@@ -1,4 +1,4 @@
-Texture2D CubeTexture : register(t0);
+TextureCube CubeTexture : register(t0);
 SamplerState BasicSampler : register(s0);
 
 struct VertexToPixel

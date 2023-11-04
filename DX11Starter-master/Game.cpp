@@ -85,7 +85,7 @@ void Game::Init()
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockTextureResouce;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockNormalResouce;
 
-	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/marble.png").c_str(), nullptr, marbleTextureResouce.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/rock.png").c_str(), nullptr, marbleTextureResouce.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/brick.png").c_str(), nullptr, brickTextureResouce.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/cobblestone.png").c_str(), nullptr, cobbleStoneTextureResouce.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/cobblestone_normals.png").c_str(), nullptr, cobbleStoneNormalResouce.GetAddressOf());
@@ -95,13 +95,16 @@ void Game::Init()
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
 
+	//use no normal map
 	materialList[0]->AddTextureSRV("SurfaceTexture", marbleTextureResouce);
 	materialList[0]->AddSample("BasicSampler", samplerState);
+
 	materialList[1]->SetTetxureOffset(0.1f);
 	materialList[1]->SetTextureScale(5);
 	materialList[1]->AddTextureSRV("SurfaceTexture", brickTextureResouce);
 	materialList[1]->AddSample("BasicSampler", samplerState);
 
+	//are normal mapped
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), normalMapPixelShader, normalMapVertexShader)));
 	materialList[2]->AddTextureSRV("SurfaceTexture", cobbleStoneTextureResouce);
 	materialList[2]->AddTextureSRV("NormalMap", cobbleStoneNormalResouce);
@@ -294,7 +297,7 @@ void Game::CreateGeometry()
 	entityList.push_back(std::make_shared<Entity>(Entity(cube, materialList[2])));
 	entityList[0]->GetTransform()->SetPosition(0.5f, 3.5f, 0.5f);
 	
-	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[0])));
+	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[1])));
 	entityList[1]->GetTransform()->SetRotation(0.0f, 0.0f, 0.5f);
 	entityList[1]->GetTransform()->SetPosition(-2.0f, 0.1f, 0.0f);
 
@@ -308,8 +311,8 @@ void Game::CreateGeometry()
 
 
 	
-	skyBox = make_shared<Sky>(Sky(cube, samplerState, device, context, skyPixelShader, skyVertexShader, FixPath(L"../../Assets/Textures/marble.png").c_str(), FixPath(L"../../Assets/Textures/marble.png").c_str(),
-		FixPath(L"../../Assets/Textures/marble.png").c_str(), FixPath(L"../../Assets/Textures/marble.png").c_str(), FixPath(L"../../Assets/Textures/marble.png").c_str(), FixPath(L"../../Assets/Textures/marble.png").c_str()));
+	skyBox = make_shared<Sky>(Sky(cube, samplerState, device, context, skyPixelShader, skyVertexShader, FixPath(L"../../Assets/Textures/Sky/right.png").c_str(), FixPath(L"../../Assets/Textures/Sky/left.png").c_str(),
+		FixPath(L"../../Assets/Textures/Sky/up.png").c_str(), FixPath(L"../../Assets/Textures/Sky/down.png").c_str(), FixPath(L"../../Assets/Textures/Sky/front.png").c_str(), FixPath(L"../../Assets/Textures/Sky/back.png").c_str()));
 }
 
 

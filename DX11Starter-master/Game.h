@@ -64,7 +64,7 @@ private:
 
 	DirectX::XMFLOAT4 colorTint = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	DirectX::XMFLOAT3 offset = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	DirectX::XMFLOAT3 ambientColor = DirectX::XMFLOAT3(0.1f, 0.1f, 0.25f);
+	DirectX::XMFLOAT3 ambientColor = DirectX::XMFLOAT3(0.85f, 0.5f, 0.8f);
 
 	Light directionalLight1 = {};
 	Light directionalLight2 = {};
