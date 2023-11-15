@@ -32,12 +32,14 @@ float4 main(VertexToPixel input) : SV_TARGET
 {
 	input.normal = normalize(input.normal);
 
-	float3 surfaceColor = SurfaceTexture.Sample(BasicSampler, (input.uv + textureOffset) * textureScale).rgb;
+	//"uncorrect" the gamma of the sampled texture color
+	float3 surfaceColor = pow(SurfaceTexture.Sample(BasicSampler, (input.uv + textureOffset) * textureScale).rgb, 2.2f);
 	surfaceColor *= colorTint;
 
 	float3 lightSum = CalcAllLights(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness);
 
-	float3 finalColor =  lightSum + (ambient * surfaceColor);
-
+	//calculate final color and gamma correct it to be linear
+	float3 finalColor =  pow(lightSum + (ambient * surfaceColor), 1.0f/2.2f);
+	
 	return float4(finalColor, 1.0f);
 }

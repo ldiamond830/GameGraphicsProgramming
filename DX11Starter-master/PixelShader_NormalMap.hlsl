@@ -1,8 +1,10 @@
 #include "ShaderUtils.hlsli"
 
-Texture2D SurfaceTexture : register(t0); // "t" registers for textures
-SamplerState BasicSampler : register(s0); // "s" registers for sampler
+Texture2D Albedo : register(t0); // "t" registers for textures
 Texture2D NormalMap : register(t1);
+Texture2D RoughnessMap : register(t2);
+Texture2D MetalnesMap : register(t3);
+SamplerState BasicSampler : register(s0); // "s" registers for sampler
 
 cbuffer buffer : register(b0) {
 	float3 colorTint;
@@ -33,7 +35,7 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 {
 	
 
-	float3 surfaceColor = SurfaceTexture.Sample(BasicSampler, (input.uv + textureOffset) * textureScale).rgb;
+	float3 surfaceColor = pow(Albedo.Sample(BasicSampler, (input.uv + textureOffset) * textureScale).rgb, 2.2f);
 	surfaceColor *= colorTint;
 
 	float3 unpackedNormal = NormalMap.Sample(BasicSampler, input.uv).rgb * 2 - 1;
@@ -47,7 +49,7 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 
 	input.normal = mul(unpackedNormal, TBN);
 	float3 lightSum = CalcAllLights(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness);
-	float3 finalColor = lightSum + (ambient * surfaceColor);
+	float3 finalColor = pow(lightSum + (ambient * surfaceColor), 1/2.2f);
 
 	return float4(finalColor, 1.0f);
 }
