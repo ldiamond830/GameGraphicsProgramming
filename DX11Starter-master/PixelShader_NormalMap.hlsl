@@ -9,7 +9,6 @@ SamplerState BasicSampler : register(s0); // "s" registers for sampler
 cbuffer buffer : register(b0) {
 	float3 colorTint;
 	float3 cameraPosition;
-	float roughness;
 	float3 ambient;
 	Light directionalLight1;
 	Light directionalLight2;
@@ -48,6 +47,10 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 	float3x3 TBN = float3x3(T, B, N);
 
 	input.normal = mul(unpackedNormal, TBN);
+
+	float roughness = RoughnessMap.Sample(SamplerOptions, input.uv).r;
+	float metalness = MetalnessMap.Sample(SamplerOptions, input.uv).r;
+
 	float3 lightSum = CalcAllLights(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness);
 	float3 finalColor = pow(lightSum + (ambient * surfaceColor), 1/2.2f);
 
