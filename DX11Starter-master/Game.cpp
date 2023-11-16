@@ -114,7 +114,7 @@ void Game::Init()
 	//are normal mapped
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), normalMapPixelShader, normalMapVertexShader)));
 	materialList[2]->AddTextureSRV("Albedo", cobbleStoneAlbedoResouce);
-	//materialList[2]->AddTextureSRV("NormalMap", cobbleStoneNormalResouce);
+	materialList[2]->AddTextureSRV("NormalMap", cobbleStoneNormalResouce);
 	materialList[2]->AddTextureSRV("MetalnessMap", cobbleStoneMetalResouce);
 	materialList[2]->AddTextureSRV("RoughnessMap", cobbleStoneRoughResouce);
 	materialList[2]->AddSample("SamplerOptions", samplerState);
