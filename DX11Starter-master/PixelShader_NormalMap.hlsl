@@ -3,8 +3,8 @@
 Texture2D Albedo : register(t0); // "t" registers for textures
 Texture2D NormalMap : register(t1);
 Texture2D RoughnessMap : register(t2);
-Texture2D MetalnesMap : register(t3);
-SamplerState BasicSampler : register(s0); // "s" registers for sampler
+Texture2D MetalnessMap : register(t3);
+SamplerState SamplerOptions : register(s0); // "s" registers for sampler
 
 cbuffer buffer : register(b0) {
 	float3 colorTint;
@@ -34,10 +34,10 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 {
 	
 
-	float3 surfaceColor = pow(Albedo.Sample(BasicSampler, (input.uv + textureOffset) * textureScale).rgb, 2.2f);
+	float3 surfaceColor = pow(Albedo.Sample(SamplerOptions, (input.uv + textureOffset) * textureScale).rgb, 2.2f);
 	surfaceColor *= colorTint;
 
-	float3 unpackedNormal = NormalMap.Sample(BasicSampler, input.uv).rgb * 2 - 1;
+	float3 unpackedNormal = NormalMap.Sample(SamplerOptions, input.uv).rgb * 2 - 1;
 	unpackedNormal = normalize(unpackedNormal);
 
 	float3 N = normalize(input.normal); // Must be normalized here or before
@@ -46,13 +46,17 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 	float3 B = cross(T, N);
 	float3x3 TBN = float3x3(T, B, N);
 
-	input.normal = mul(unpackedNormal, TBN);
+	//input.normal = mul(unpackedNormal, TBN);
 
 	float roughness = RoughnessMap.Sample(SamplerOptions, input.uv).r;
 	float metalness = MetalnessMap.Sample(SamplerOptions, input.uv).r;
+	// Assume albedo texture is actually holding specular color where metalness == 1
+	// Note the use of lerp here - metal is generally 0 or 1, but might be in between
+	// because of linear texture sampling, so we lerp the specular color to match
+	float3 specular = lerp(F0_NON_METAL, surfaceColor.rgb, 1);
 
-	float3 lightSum = CalcAllLights(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness);
-	float3 finalColor = pow(lightSum + (ambient * surfaceColor), 1/2.2f);
+	float3 lightSum = CalcAllLights(lights, float3(1,1,1), input.normal, cameraPosition, input.worldPosition, 1, 1, specular);
+	float3 finalColor = pow(lightSum, 1/2.2f);
 
 	return float4(finalColor, 1.0f);
 }

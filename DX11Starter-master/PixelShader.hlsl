@@ -36,7 +36,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 surfaceColor = pow(SurfaceTexture.Sample(BasicSampler, (input.uv + textureOffset) * textureScale).rgb, 2.2f);
 	surfaceColor *= colorTint;
 
-	float3 lightSum = CalcAllLights(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness);
+	float3 lightSum = CalcAllLights(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness, 0.0f, 0.0f);
 
 	//calculate final color and gamma correct it to be linear
 	float3 finalColor =  pow(lightSum + (ambient * surfaceColor), 1.0f/2.2f);

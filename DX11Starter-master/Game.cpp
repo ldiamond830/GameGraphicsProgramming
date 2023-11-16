@@ -80,15 +80,22 @@ void Game::Init()
 
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> marbleTextureResouce;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> brickTextureResouce;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleStoneTextureResouce;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleStoneAlbedoResouce;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleStoneNormalResouce;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleStoneMetalResouce;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleStoneRoughResouce;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockTextureResouce;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockNormalResouce;
 
+
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/rock.png").c_str(), nullptr, marbleTextureResouce.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/brick.png").c_str(), nullptr, brickTextureResouce.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/cobblestone.png").c_str(), nullptr, cobbleStoneTextureResouce.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/cobblestone_normals.png").c_str(), nullptr, cobbleStoneNormalResouce.GetAddressOf());
+
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/cobblestone_albedo.png").c_str(), nullptr, cobbleStoneAlbedoResouce.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/cobblestone_normals.png").c_str(), nullptr, cobbleStoneNormalResouce.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/cobblestone_metal.png").c_str(), nullptr, cobbleStoneMetalResouce.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/cobblestone_roughness.png").c_str(), nullptr, cobbleStoneRoughResouce.GetAddressOf());
+
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/rock.png").c_str(), nullptr, rockTextureResouce.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/rock_normals.png").c_str(), nullptr, rockNormalResouce.GetAddressOf());
 	
@@ -97,23 +104,25 @@ void Game::Init()
 
 	//use no normal map
 	materialList[0]->AddTextureSRV("SurfaceTexture", marbleTextureResouce);
-	materialList[0]->AddSample("BasicSampler", samplerState);
+	materialList[0]->AddSample("SamplerOptions", samplerState);
 
 	materialList[1]->SetTetxureOffset(0.1f);
 	materialList[1]->SetTextureScale(5);
 	materialList[1]->AddTextureSRV("SurfaceTexture", brickTextureResouce);
-	materialList[1]->AddSample("BasicSampler", samplerState);
+	materialList[1]->AddSample("SamplerOptions", samplerState);
 
 	//are normal mapped
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), normalMapPixelShader, normalMapVertexShader)));
-	materialList[2]->AddTextureSRV("SurfaceTexture", cobbleStoneTextureResouce);
-	materialList[2]->AddTextureSRV("NormalMap", cobbleStoneNormalResouce);
-	materialList[2]->AddSample("BasicSampler", samplerState);
+	materialList[2]->AddTextureSRV("Albedo", cobbleStoneAlbedoResouce);
+	//materialList[2]->AddTextureSRV("NormalMap", cobbleStoneNormalResouce);
+	materialList[2]->AddTextureSRV("MetalnessMap", cobbleStoneMetalResouce);
+	materialList[2]->AddTextureSRV("RoughnessMap", cobbleStoneRoughResouce);
+	materialList[2]->AddSample("SamplerOptions", samplerState);
 
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), normalMapPixelShader, normalMapVertexShader)));
 	materialList[3]->AddTextureSRV("SurfaceTexture", rockTextureResouce);
 	materialList[3]->AddTextureSRV("NormalMap", rockNormalResouce);
-	materialList[3]->AddSample("BasicSampler", samplerState);
+	materialList[3]->AddSample("SamplerOptions", samplerState);
 
 	
 

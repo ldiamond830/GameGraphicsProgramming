@@ -96,6 +96,13 @@ float Specular(float3 cameraPosition, float3 pixelWorldPosition, float3 incoming
     }
 }
 
+// Lambert diffuse BRDF - Same as the basic lighting diffuse calculation!
+// - NOTE: this function assumes the vectors are already NORMALIZED!
+float DiffusePBR(float3 normal, float3 dirToLight)
+{
+    return saturate(dot(normal, dirToLight));
+}
+
 // Calculates diffuse amount based on energy conservation
 //
 // diffuse   - Diffuse amount
@@ -216,29 +223,42 @@ float Attenuate(Light light, float3 worldPos)
     return att * att;
 }
 
-float3 DirectionalLight(Light light, float3 surfaceColor, float3 normal, float3 cameraPosition, float3 pixelWorldPosition, float roughness)
+float3 DirectionalLight(Light light, float3 albedo, float3 normal, float3 cameraPosition, float3 pixelWorldPosition, float roughness, float metalness, float3 specularInputColor)
 {
-    float diffuseColor = Diffuse(normal, normalize(light.direction * -1));
-    float specularColor = Specular(cameraPosition, pixelWorldPosition, light.direction, normal, roughness);
+    float diffuseColor = DiffusePBR(normal, normalize(light.direction * -1));
+
+    float3 F; //out variable for use in calculating conservation of energy
+    float3 specularColor = MicrofacetBRDF(normal, pixelWorldPosition, cameraPosition, roughness, specularInputColor, F);
+
+    // Calculate diffuse with energy conservation, including cutting diffuse for metals
+    float3 balancedDiff = DiffuseEnergyConserve(diffuseColor, F, metalness);
+
     //cuts specular when diffuse color is 0
-    specularColor *= any(diffuseColor);
-    return (surfaceColor * (diffuseColor + specularColor)) * light.intensity * light.color;
+    //specularColor *= any(diffuseColor);
+    return (balancedDiff * albedo + specularColor) * light.intensity * light.color;
 }
 
-float3 PointLight(Light light, float3 surfaceColor, float3 normal, float3 cameraPosition, float3 pixelWorldPosition, float roughness)
+float3 PointLight(Light light, float3 albedo, float3 normal, float3 cameraPosition, float3 pixelWorldPosition, float roughness, float metalness, float3 specularInputColor)
 {
     float3 direction = normalize(pixelWorldPosition - light.position);
-    float diffuseColor = Diffuse(normal, normalize(direction * -1));
-    float specularColor = Specular(cameraPosition, pixelWorldPosition, direction, normal, roughness);
+    float diffuseColor = DiffusePBR(normal, normalize(direction * -1));
+
+    
+    float3 F; //out variable for use in calculating conservation of energy
+    float3 specularColor = MicrofacetBRDF(normal, pixelWorldPosition, cameraPosition, roughness, specularInputColor, F);
+    
+    // Calculate diffuse with energy conservation, including cutting diffuse for metals
+    float3 balancedDiff = DiffuseEnergyConserve(diffuseColor, F, metalness);
+
     //cuts specular when diffuse color is 0
-    specularColor *= any(diffuseColor);
+    //specularColor *= any(diffuseColor);
     float attenuation = Attenuate(light, pixelWorldPosition);
-    return ((surfaceColor * (diffuseColor + specularColor)) * light.intensity * light.color) * attenuation;
+    return ((balancedDiff * albedo + specularColor) * light.intensity * light.color) * attenuation;
 }
 
 
 
-float3 CalcAllLights(Light lights[5], float3 surfaceColor, float3 normal, float3 cameraPosition, float3 worldPosition, float roughness)
+float3 CalcAllLights(Light lights[5], float3 albedo, float3 normal, float3 cameraPosition, float3 worldPosition, float roughness, float metalness, float3 f0)
 {
     float3 lightSum = 0;
     for (int i = 0; i < 5; i++)
@@ -246,10 +266,10 @@ float3 CalcAllLights(Light lights[5], float3 surfaceColor, float3 normal, float3
         switch (lights[i].type)
         {
             case LIGHT_TYPE_DIRECTIONAL:
-                lightSum += DirectionalLight(lights[i], surfaceColor, normal, cameraPosition, worldPosition, roughness);
+                lightSum += DirectionalLight(lights[i], albedo, normal, cameraPosition, worldPosition, roughness, metalness, f0);
                 break;
             case LIGHT_TYPE_POINT:
-                lightSum += PointLight(lights[i], surfaceColor, normal, cameraPosition, worldPosition, roughness);
+                lightSum += PointLight(lights[i], albedo, normal, cameraPosition, worldPosition, roughness, metalness, f0);
                 break;
         }
     }
