@@ -74,6 +74,7 @@ struct Light
     float3 padding;
 };
 
+//identical to PBR lambert but I'm just separating them into different functions because I think it's easier to read when everything is either PBR or non-PBR
 float Diffuse(float3 normal, float3 dirToLight)
 {
     return saturate(dot(normal, dirToLight));
@@ -225,11 +226,13 @@ float Attenuate(Light light, float3 worldPos)
 
 float3 DirectionalLight(Light light, float3 albedo, float3 normal, float3 cameraPosition, float3 pixelWorldPosition, float roughness, float metalness, float3 specularInputColor)
 {
-    float3 direction = normalize(pixelWorldPosition - light.position);
+    float3 directionToLight = normalize(-light.direction);
+    float3 directionToCamera = normalize(cameraPosition - pixelWorldPosition);
+    
     float diffuseColor = DiffusePBR(normal, normalize(light.direction * -1));
 
     float3 F; //out variable for use in calculating conservation of energy
-    float3 specularColor = MicrofacetBRDF(normal, direction, cameraPosition, roughness, specularInputColor, F);
+    float3 specularColor = MicrofacetBRDF(normal, directionToLight, directionToCamera, roughness, specularInputColor, F);
 
     // Calculate diffuse with energy conservation, including cutting diffuse for metals
     float3 balancedDiff = DiffuseEnergyConserve(diffuseColor, F, metalness);
@@ -241,8 +244,9 @@ float3 DirectionalLight(Light light, float3 albedo, float3 normal, float3 camera
 
 float3 PointLight(Light light, float3 albedo, float3 normal, float3 cameraPosition, float3 pixelWorldPosition, float roughness, float metalness, float3 specularInputColor)
 {
-    float3 direction = normalize(pixelWorldPosition - light.position);
-    float diffuseColor = DiffusePBR(normal, normalize(direction * -1));
+    float3 direction = normalize(light.position - pixelWorldPosition);
+    
+    float diffuseColor = DiffusePBR(normal, normalize(direction));
 
     
     float3 F; //out variable for use in calculating conservation of energy

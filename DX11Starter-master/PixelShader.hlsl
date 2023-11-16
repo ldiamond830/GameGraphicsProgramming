@@ -1,7 +1,9 @@
 #include "ShaderUtils.hlsli"
 
-Texture2D SurfaceTexture : register(t0); // "t" registers for textures
-SamplerState BasicSampler : register(s0); // "s" registers for sampler
+Texture2D Albedo : register(t0); // "t" registers for textures
+Texture2D RoughnessMap : register(t1);
+Texture2D MetalnessMap : register(t2);
+SamplerState SamplerOptions : register(s0); // "s" registers for sampler
 
 cbuffer buffer : register(b0) {
 	float3 colorTint;
@@ -33,13 +35,18 @@ float4 main(VertexToPixel input) : SV_TARGET
 	input.normal = normalize(input.normal);
 
 	//"uncorrect" the gamma of the sampled texture color
-	float3 surfaceColor = pow(SurfaceTexture.Sample(BasicSampler, (input.uv + textureOffset) * textureScale).rgb, 2.2f);
+	float3 surfaceColor = pow(Albedo.Sample(SamplerOptions, (input.uv + textureOffset) * textureScale).rgb, 2.2f);
 	surfaceColor *= colorTint;
 
-	float3 lightSum = CalcAllLights(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness, 0.0f, 0.0f);
+	float roughness = RoughnessMap.Sample(SamplerOptions, input.uv).r;
+	float metalness = MetalnessMap.Sample(SamplerOptions, input.uv).r;
+	// Assume albedo texture is actually holding specular color where metalness == 1
+	// Note the use of lerp here - metal is generally 0 or 1, but might be in between
+	// because of linear texture sampling, so we lerp the specular color to match
+	float3 specular = lerp(F0_NON_METAL, surfaceColor.rgb, metalness);
 
-	//calculate final color and gamma correct it to be linear
-	float3 finalColor =  pow(lightSum + (ambient * surfaceColor), 1.0f/2.2f);
+	float3 lightSum = CalcAllLights(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness, metalness, specular);
+	float3 finalColor = pow(lightSum, 1 / 2.2f);
 	
 	return float4(finalColor, 1.0f);
 }

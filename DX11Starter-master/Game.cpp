@@ -80,13 +80,26 @@ void Game::Init()
 
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> marbleTextureResouce;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> brickTextureResouce;
+
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleStoneAlbedoResouce;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleStoneNormalResouce;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleStoneMetalResouce;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleStoneRoughResouce;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockTextureResouce;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockNormalResouce;
 
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> floorAlbedoResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> floorNormalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> floorMetalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> floorRoughResource;
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> bronzeAlbedoResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> bronzeNormalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> bronzeMetalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> bronzeRoughResource;
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> paintAlbedoResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> paintNormalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> paintMetalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> paintRoughResource;
 
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/rock.png").c_str(), nullptr, marbleTextureResouce.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/brick.png").c_str(), nullptr, brickTextureResouce.GetAddressOf());
@@ -96,19 +109,36 @@ void Game::Init()
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/cobblestone_metal.png").c_str(), nullptr, cobbleStoneMetalResouce.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/cobblestone_roughness.png").c_str(), nullptr, cobbleStoneRoughResouce.GetAddressOf());
 
-	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/rock.png").c_str(), nullptr, rockTextureResouce.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/rock_normals.png").c_str(), nullptr, rockNormalResouce.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/floor_albedo.png").c_str(), nullptr, floorAlbedoResource.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/floor_normals.png").c_str(), nullptr, floorNormalResource.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/floor_metal.png").c_str(), nullptr, floorMetalResource.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/floor_roughness.png").c_str(), nullptr, floorRoughResource.GetAddressOf());
+
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/bronze_albedo.png").c_str(), nullptr, bronzeAlbedoResource.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/bronze_normals.png").c_str(), nullptr, bronzeNormalResource.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/bronze_metal.png").c_str(), nullptr, bronzeMetalResource.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/bronze_roughness.png").c_str(), nullptr, bronzeRoughResource.GetAddressOf());
+
+
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/paint_albedo.png").c_str(), nullptr, paintAlbedoResource.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/paint_normals.png").c_str(), nullptr, paintNormalResource.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/paint_metal.png").c_str(), nullptr, paintMetalResource.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/paint_roughness.png").c_str(), nullptr, paintRoughResource.GetAddressOf());
 	
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
 
 	//use no normal map
-	materialList[0]->AddTextureSRV("SurfaceTexture", marbleTextureResouce);
+	materialList[0]->AddTextureSRV("Albedo", floorAlbedoResource);
+	materialList[0]->AddTextureSRV("MetalnessMap", floorMetalResource);
+	materialList[0]->AddTextureSRV("RoughnessMap", floorRoughResource);
 	materialList[0]->AddSample("SamplerOptions", samplerState);
 
 	materialList[1]->SetTetxureOffset(0.1f);
 	materialList[1]->SetTextureScale(5);
-	materialList[1]->AddTextureSRV("SurfaceTexture", brickTextureResouce);
+	materialList[1]->AddTextureSRV("Albedo", cobbleStoneAlbedoResouce);
+	materialList[1]->AddTextureSRV("MetalnessMap", cobbleStoneMetalResouce);
+	materialList[1]->AddTextureSRV("RoughnessMap", cobbleStoneRoughResouce);
 	materialList[1]->AddSample("SamplerOptions", samplerState);
 
 	//are normal mapped
@@ -120,10 +150,25 @@ void Game::Init()
 	materialList[2]->AddSample("SamplerOptions", samplerState);
 
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), normalMapPixelShader, normalMapVertexShader)));
-	materialList[3]->AddTextureSRV("SurfaceTexture", rockTextureResouce);
-	materialList[3]->AddTextureSRV("NormalMap", rockNormalResouce);
+	materialList[3]->AddTextureSRV("Albedo", floorAlbedoResource);
+	materialList[3]->AddTextureSRV("NormalMap", floorNormalResource);
+	materialList[3]->AddTextureSRV("MetalnessMap", floorMetalResource);
+	materialList[3]->AddTextureSRV("RoughnessMap", floorRoughResource);
 	materialList[3]->AddSample("SamplerOptions", samplerState);
 
+	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), normalMapPixelShader, normalMapVertexShader)));
+	materialList[4]->AddTextureSRV("Albedo", bronzeAlbedoResource);
+	materialList[4]->AddTextureSRV("NormalMap", bronzeNormalResource);
+	materialList[4]->AddTextureSRV("MetalnessMap", bronzeMetalResource);
+	materialList[4]->AddTextureSRV("RoughnessMap", bronzeRoughResource);
+	materialList[4]->AddSample("SamplerOptions", samplerState);
+
+	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), normalMapPixelShader, normalMapVertexShader)));
+	materialList[5]->AddTextureSRV("Albedo", paintAlbedoResource);
+	materialList[5]->AddTextureSRV("NormalMap", paintNormalResource);
+	materialList[5]->AddTextureSRV("MetalnessMap", paintMetalResource);
+	materialList[5]->AddTextureSRV("RoughnessMap", paintRoughResource);
+	materialList[5]->AddSample("SamplerOptions", samplerState);
 	
 
 	//materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));
@@ -306,11 +351,11 @@ void Game::CreateGeometry()
 	entityList.push_back(std::make_shared<Entity>(Entity(cube, materialList[2])));
 	entityList[0]->GetTransform()->SetPosition(0.5f, 3.5f, 0.5f);
 	
-	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[1])));
+	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[5])));
 	entityList[1]->GetTransform()->SetRotation(0.0f, 0.0f, 0.5f);
 	entityList[1]->GetTransform()->SetPosition(-2.0f, 0.1f, 0.0f);
 
-	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[0])));
+	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[4])));
 	//entityList[2]->GetTransform()->SetScale(2.0f, 1.0f, 0.5f);
 	entityList[2]->GetTransform()->SetPosition(3.0f, 0.5f, 0.0f);
 

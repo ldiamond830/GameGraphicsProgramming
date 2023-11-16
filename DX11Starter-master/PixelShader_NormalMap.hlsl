@@ -53,9 +53,9 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 	// Assume albedo texture is actually holding specular color where metalness == 1
 	// Note the use of lerp here - metal is generally 0 or 1, but might be in between
 	// because of linear texture sampling, so we lerp the specular color to match
-	float3 specular = lerp(F0_NON_METAL, surfaceColor.rgb, 0);
+	float3 specular = lerp(F0_NON_METAL, surfaceColor.rgb, metalness);
 
-	float3 lightSum = CalcAllLights(lights, float3(1,1,1), input.normal, cameraPosition, input.worldPosition, 1, 0, specular);
+	float3 lightSum = CalcAllLights(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness, metalness, specular);
 	float3 finalColor = pow(lightSum, 1/2.2f);
 
 	return float4(finalColor, 1.0f);
