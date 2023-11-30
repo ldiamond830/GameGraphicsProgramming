@@ -35,6 +35,7 @@ private:
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void LoadShaders(); 
 	void CreateGeometry();
+	void InitShadowMapResources();
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
@@ -66,7 +67,8 @@ private:
 	DirectX::XMFLOAT3 offset = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	DirectX::XMFLOAT3 ambientColor = DirectX::XMFLOAT3(0.85f, 0.5f, 0.8f);
 
-	Light directionalLight1 = {};
+
+	Light sun = {};
 	Light directionalLight2 = {};
 	Light directionalLight3 = {};
 
@@ -76,5 +78,14 @@ private:
 	std::vector<Light> lights;
 	std::shared_ptr <Sky> skyBox;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
+
+	//shadow mapping resources
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> shadowDSV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shadowSRV;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> shadowRasterizer;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> shadowSampler;
+	DirectX::XMFLOAT4X4 lightViewMatrix;
+	DirectX::XMFLOAT4X4 lightProjectionMatrix;
+	float lightProjectionSize = 15.0f;
 };
 

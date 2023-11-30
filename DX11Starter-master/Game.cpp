@@ -219,10 +219,10 @@ void Game::Init()
 	currentCamera = cameraList[mainCameraIndex];
 
 
-	directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight1.direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	directionalLight1.color = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	directionalLight1.intensity = 0.5f;
+	sun.type = LIGHT_TYPE_DIRECTIONAL;
+	sun.direction = XMFLOAT3(1.0f, -0.25f, 0.0f);
+	sun.color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	sun.intensity = 0.5f;
 
 	directionalLight2.type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight2.direction = XMFLOAT3(-1.0f, 0.0f, 0.0f);
@@ -246,7 +246,7 @@ void Game::Init()
 	pointLight2.intensity = 1.0f;
 	pointLight2.range = 10.0f;
 
-	lights.push_back(directionalLight1);
+	lights.push_back(sun);
 	lights.push_back(directionalLight2);
 	lights.push_back(directionalLight3);
 	lights.push_back(pointLight1);
@@ -349,7 +349,7 @@ void Game::CreateGeometry()
 	UINT miscIndices[] = { 0,1,2,1,3,4,5,3,6};
 	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>(Mesh(FixPath(L"../../Assets/Models/sphere.obj").c_str(), context, device));
 	entityList.push_back(std::make_shared<Entity>(Entity(cube, materialList[2])));
-	entityList[0]->GetTransform()->SetPosition(0.5f, 3.5f, 0.5f);
+	entityList[0]->GetTransform()->SetPosition(0.5f, 3.5f, 1.5f);
 	
 	entityList.push_back(std::make_shared<Entity>(Entity(torus, materialList[5])));
 	entityList[1]->GetTransform()->SetRotation(0.0f, 0.0f, 0.5f);
@@ -363,10 +363,59 @@ void Game::CreateGeometry()
 	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[3])));
 	entityList[3]->GetTransform()->SetPosition(7.0f, 0.5f, 0.0f);
 
-
-	
+	//floor
+	entityList.push_back(std::make_shared<Entity>(Entity(cube, materialList[2])));
+	entityList[4]->GetTransform()->SetPosition(0.0f, -3.5f, 0.0f);
+	entityList[4]->GetTransform()->SetScale(20.0f, 1.0f, 20.0f);
 	skyBox = make_shared<Sky>(Sky(cube, samplerState, device, context, skyPixelShader, skyVertexShader, FixPath(L"../../Assets/Textures/Sky/right.png").c_str(), FixPath(L"../../Assets/Textures/Sky/left.png").c_str(),
 		FixPath(L"../../Assets/Textures/Sky/up.png").c_str(), FixPath(L"../../Assets/Textures/Sky/down.png").c_str(), FixPath(L"../../Assets/Textures/Sky/front.png").c_str(), FixPath(L"../../Assets/Textures/Sky/back.png").c_str()));
+}
+
+void Game::InitShadowMapResources()
+{
+	// Create the actual texture that will be the shadow map
+	D3D11_TEXTURE2D_DESC shadowDesc = {};
+	//map should be square with sizes as a power of 2
+	shadowDesc.Width = 1024; 
+	shadowDesc.Height = 1024; 
+	shadowDesc.ArraySize = 1;
+	shadowDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+	shadowDesc.CPUAccessFlags = 0;
+	shadowDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	shadowDesc.MipLevels = 1;
+	shadowDesc.MiscFlags = 0;
+	shadowDesc.SampleDesc.Count = 1;
+	shadowDesc.SampleDesc.Quality = 0;
+	shadowDesc.Usage = D3D11_USAGE_DEFAULT;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> shadowTexture;
+	device->CreateTexture2D(&shadowDesc, 0, shadowTexture.GetAddressOf());
+
+	// Create the depth/stencil view
+	D3D11_DEPTH_STENCIL_VIEW_DESC shadowDSDesc = {};
+	shadowDSDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	shadowDSDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	shadowDSDesc.Texture2D.MipSlice = 0;
+	device->CreateDepthStencilView(
+		shadowTexture.Get(),
+		&shadowDSDesc,
+		shadowDSV.GetAddressOf());
+	// Create the SRV for the shadow map
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	device->CreateShaderResourceView(
+		shadowTexture.Get(),
+		&srvDesc,
+		shadowSRV.GetAddressOf());
+
+
+	XMMATRIX lightView = XMMatrixLookToLH(-XMLoadFloat3(&sun.direction) * 20, XMLoadFloat3(&sun.direction), XMVectorSet(0, 1, 0, 0));
+	XMStoreFloat4x4(&lightViewMatrix, lightView);
+
+	XMMATRIX lightProjection = XMMatrixOrthographicLH(lightProjectionSize, lightProjectionSize, 1.0f, 100.0f);
+	XMStoreFloat4x4(&lightProjectionMatrix, lightProjection);
 }
 
 
