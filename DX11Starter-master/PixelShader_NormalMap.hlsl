@@ -6,7 +6,7 @@ Texture2D RoughnessMap : register(t2);
 Texture2D MetalnessMap : register(t3);
 Texture2D ShadowMap : register(t4);
 SamplerState SamplerOptions : register(s0); // "s" registers for sampler
-SamplerState ShadowSampler : register(s1);
+SamplerComparisonState ShadowSampler : register(s1);
 
 cbuffer buffer : register(b0) {
 	float3 colorTint;
@@ -41,7 +41,6 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 	shadowUV.y = 1 - shadowUV.y; // Flip the Y
 	// Grab the distances we need: light-to-pixel and closest-surface
 	float distToLight = input.shadowMapPos.z;
-	float distShadowMap = ShadowMap.Sample(ShadowSampler, shadowUV).r;
 
 	// Get a ratio of comparison results using SampleCmpLevelZero()
 	float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, distToLight).r;
