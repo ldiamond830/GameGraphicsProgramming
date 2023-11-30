@@ -5,6 +5,8 @@ cbuffer ExternalData : register(b0)
 	matrix worldInvTranspose;
 	matrix view;
 	matrix projection;
+	matrix lightView;
+	matrix lightProjection;
 }
 
 
@@ -38,6 +40,10 @@ VertexToPixelNormalMap main(VertexShaderInput input)
 	// - The values will be interpolated per-pixel by the rasterizer
 	// - We don't need to alter it here, but we do need to send it to the pixel shader
 	//output.color = input.color * colorTint;
+
+	//calculating matricies from shadow map
+	matrix shadowWVP = mul(lightProjection, mul(lightView, world));
+	output.shadowMapPos = mul(shadowWVP, float4(input.localPosition, 1.0f));
 
 	// Whatever we return will make its way through the pipeline to the
 	// next programmable stage we're using (the pixel shader for now)

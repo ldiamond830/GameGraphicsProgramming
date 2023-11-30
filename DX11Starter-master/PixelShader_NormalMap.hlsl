@@ -4,6 +4,7 @@ Texture2D Albedo : register(t0); // "t" registers for textures
 Texture2D NormalMap : register(t1);
 Texture2D RoughnessMap : register(t2);
 Texture2D MetalnessMap : register(t3);
+Texture2D ShadowMap : register(t4);
 SamplerState SamplerOptions : register(s0); // "s" registers for sampler
 
 cbuffer buffer : register(b0) {
@@ -32,7 +33,17 @@ cbuffer buffer : register(b0) {
 // --------------------------------------------------------
 float4 main(VertexToPixelNormalMap input) : SV_TARGET
 {
-	
+		// Perform the perspective divide (divide by W) ourselves
+	input.shadowMapPos /= input.shadowMapPos.w;
+	// Convert the normalized device coordinates to UVs for sampling
+	float2 shadowUV = input.shadowMapPos.xy * 0.5f + 0.5f;
+	shadowUV.y = 1 - shadowUV.y; // Flip the Y
+	// Grab the distances we need: light-to-pixel and closest-surface
+	float distToLight = input.shadowMapPos.z;
+	float distShadowMap = ShadowMap.Sample(SamplerOptions, shadowUV).r;
+	// For testing, just return black where there are shadows.
+	if (distShadowMap < distToLight)
+	return float4(0, 0, 0, 1);
 
 	float3 surfaceColor = pow(Albedo.Sample(SamplerOptions, (input.uv + textureOffset) * textureScale).rgb, 2.2f);
 	surfaceColor *= colorTint;

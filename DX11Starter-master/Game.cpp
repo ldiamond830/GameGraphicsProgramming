@@ -251,6 +251,8 @@ void Game::Init()
 	lights.push_back(directionalLight3);
 	lights.push_back(pointLight1);
 	lights.push_back(pointLight2);
+	
+	InitShadowMapResources();
 }
 
 // --------------------------------------------------------
@@ -277,6 +279,8 @@ void Game::LoadShaders()
 		FixPath(L"SkyVertexShader.cso").c_str());
 	skyPixelShader = std::make_shared<SimplePixelShader>(device, context,
 		FixPath(L"SkyPixelShader.cso").c_str());
+	shadowVertexShader = std::make_shared<SimpleVertexShader>(device, context,
+		FixPath(L"ShadowVertexShader.cso").c_str());
 }
 
 
@@ -376,8 +380,8 @@ void Game::InitShadowMapResources()
 	// Create the actual texture that will be the shadow map
 	D3D11_TEXTURE2D_DESC shadowDesc = {};
 	//map should be square with sizes as a power of 2
-	shadowDesc.Width = 1024; 
-	shadowDesc.Height = 1024; 
+	shadowDesc.Width = shadowMapResolution; 
+	shadowDesc.Height = shadowMapResolution; 
 	shadowDesc.ArraySize = 1;
 	shadowDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 	shadowDesc.CPUAccessFlags = 0;
@@ -410,12 +414,25 @@ void Game::InitShadowMapResources()
 		&srvDesc,
 		shadowSRV.GetAddressOf());
 
+	D3D11_RASTERIZER_DESC shadowRastDesc = {};
+	shadowRastDesc.FillMode = D3D11_FILL_SOLID;
+	shadowRastDesc.CullMode = D3D11_CULL_BACK;
+	shadowRastDesc.DepthClipEnable = true;
+	shadowRastDesc.DepthBias = 1000; // Min. precision units, not world units!
+	shadowRastDesc.SlopeScaledDepthBias = 1.0f; // Bias more based on slope
+	device->CreateRasterizerState(&shadowRastDesc, &shadowRasterizer);
 
-	XMMATRIX lightView = XMMatrixLookToLH(-XMLoadFloat3(&sun.direction) * 20, XMLoadFloat3(&sun.direction), XMVectorSet(0, 1, 0, 0));
-	XMStoreFloat4x4(&lightViewMatrix, lightView);
 
-	XMMATRIX lightProjection = XMMatrixOrthographicLH(lightProjectionSize, lightProjectionSize, 1.0f, 100.0f);
-	XMStoreFloat4x4(&lightProjectionMatrix, lightProjection);
+	//XMMATRIX fromLightView = XMMatrixLookToLH(-XMLoadFloat3(&sun.direction) * 20, XMLoadFloat3(&sun.direction), XMVectorSet(0, 1, 0, 0));
+	//XMStoreFloat4x4(&lightViewMatrix, fromLightView);
+	XMMATRIX shView = XMMatrixLookAtLH(
+		XMVectorSet(0, 20, -20, 0),
+		XMVectorSet(0, 0, 0, 0),
+		XMVectorSet(0, 1, 0, 0));
+	XMStoreFloat4x4(&lightViewMatrix, shView);
+
+	XMMATRIX fromLightProjection = XMMatrixOrthographicLH(lightProjectionSize, lightProjectionSize, 1.0f, 100.0f);
+	XMStoreFloat4x4(&lightProjectionMatrix, fromLightProjection);
 }
 
 
@@ -459,7 +476,7 @@ void Game::Update(float deltaTime, float totalTime)
 	ImGui::Text("Framerate %f", ImGui::GetIO().Framerate);
 	ImGui::Text("Width: %i", windowWidth);
 	ImGui::Text("Height: %i", windowHeight);
-
+	ImGui::Image(shadowSRV.Get(), ImVec2(512, 512));
 	if (ImGui::Button("Next Camera")) {
 		mainCameraIndex = (mainCameraIndex + 1) % cameraList.size();
 		currentCamera = cameraList[mainCameraIndex];
@@ -501,13 +518,10 @@ void Game::Update(float deltaTime, float totalTime)
 	ImGui::End();
 
 	//Update Geometery
-	/*
-	entityList[0]->GetTransform()->Rotate(0.0f, 0.0f, 0.0001f);
-	entityList[0]->GetTransform()->MoveRelative(0.0001f, 0.0f, 0.0f);
-	entityList[2]->GetTransform()->MoveAbsolute((float)cos(totalTime), 0.0f, 0.0f);
-	entityList[3]->GetTransform()->MoveAbsolute(0.0f, -0.0001f, 0.0f);
-	entityList[3]->GetTransform()->Scale(1.0001f, 1.00002f, 1.0f);
-	*/
+	//skips updating the floor
+	for(int i =0; i < entityList.size() - 1; i++){
+		entityList[i]->GetTransform()->MoveAbsolute(sin(totalTime) * deltaTime, 0, 0);
+	}
 	currentCamera->Update(deltaTime);
 
 	// Example input checking: Quit if the escape key is pressed
@@ -533,13 +547,18 @@ void Game::Draw(float deltaTime, float totalTime)
 		// Clear the depth buffer (resets per-pixel occlusion information)
 		context->ClearDepthStencilView(depthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
-	
+
+	DrawShadowMap();
+
 	// DRAW geometry
 	// - These steps are generally repeated for EACH object you draw
 	// - Other Direct3D calls will also be necessary to do more complex things
 	for (int i = 0; i < entityList.size(); i++) {
 		entityList[i]->GetMaterial()->GetPixelShader()->SetFloat3("ambient", ambientColor);
 		entityList[i]->GetMaterial()->GetPixelShader()->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
+		entityList[i]->GetMaterial()->GetPixelShader()->SetShaderResourceView("ShadowMap", shadowSRV);
+		entityList[i]->GetMaterial()->GetVertexShader()->SetMatrix4x4("lightView", lightViewMatrix);
+		entityList[i]->GetMaterial()->GetVertexShader()->SetMatrix4x4("lightProjection", lightProjectionMatrix);
 		entityList[i]->Draw(colorTint, context, currentCamera);
 	}
 
@@ -565,4 +584,39 @@ void Game::Draw(float deltaTime, float totalTime)
 		// Must re-bind buffers after presenting, as they become unbound
 		context->OMSetRenderTargets(1, backBufferRTV.GetAddressOf(), depthBufferDSV.Get());
 	}
+}
+
+void Game::DrawShadowMap()
+{
+	context->OMSetRenderTargets(0, 0, shadowDSV.Get());
+	context->ClearDepthStencilView(shadowDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+	context->RSSetState(shadowRasterizer.Get());
+
+	//turn off the pixel shader
+	context->PSSetShader(0, 0, 0);
+
+	D3D11_VIEWPORT viewport = {};
+	viewport.Width = (float)shadowMapResolution;
+	viewport.Height = (float)shadowMapResolution;
+	viewport.MaxDepth = 1.0f;
+	context->RSSetViewports(1, &viewport);
+
+	shadowVertexShader->SetShader();
+	shadowVertexShader->SetMatrix4x4("view", lightViewMatrix);
+	shadowVertexShader->SetMatrix4x4("projection", lightProjectionMatrix);
+	// Loop and draw all entities
+	for (auto& e : entityList)
+	{
+		shadowVertexShader->SetMatrix4x4("world", e->GetTransform()->GetWorldMatrix());
+		shadowVertexShader->CopyAllBufferData();
+		// Draw the mesh directly to avoid the entity's material
+		// Note: Your code may differ significantly here!
+		e->GetMesh()->Draw();
+	}
+
+	context->OMSetRenderTargets(1, backBufferRTV.GetAddressOf(), depthBufferDSV.Get());
+	viewport.Width = (float)this->windowWidth;
+	viewport.Height = (float)this->windowHeight;
+	context->RSSetViewports(1, &viewport);
+	context->RSSetState(0);
 }

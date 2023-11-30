@@ -14,7 +14,7 @@
 #include "Light.h"
 #include "Sky.h";
 
-class Game 
+class Game
 	: public DXCore
 {
 
@@ -28,12 +28,12 @@ public:
 	void OnResize();
 	void Update(float deltaTime, float totalTime);
 	void Draw(float deltaTime, float totalTime);
-
+	void DrawShadowMap();
 
 private:
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
-	void LoadShaders(); 
+	void LoadShaders();
 	void CreateGeometry();
 	void InitShadowMapResources();
 
@@ -45,7 +45,7 @@ private:
 	// Buffers to hold actual geometry data
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
-	
+
 	// Shaders and shader-related constructs
 	std::shared_ptr<SimplePixelShader> defaultPixelShader;
 	std::shared_ptr<SimplePixelShader> customPixelShader;
@@ -54,6 +54,7 @@ private:
 	std::shared_ptr<SimpleVertexShader> vertexShader;
 	std::shared_ptr<SimpleVertexShader> normalMapVertexShader;
 	std::shared_ptr<SimpleVertexShader> skyVertexShader;
+	std::shared_ptr<SimpleVertexShader> shadowVertexShader;
 
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 
@@ -87,5 +88,6 @@ private:
 	DirectX::XMFLOAT4X4 lightViewMatrix;
 	DirectX::XMFLOAT4X4 lightProjectionMatrix;
 	float lightProjectionSize = 15.0f;
+	int shadowMapResolution = 1024;
 };
 
