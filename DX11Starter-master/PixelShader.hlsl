@@ -45,7 +45,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// because of linear texture sampling, so we lerp the specular color to match
 	float3 specular = lerp(F0_NON_METAL, surfaceColor.rgb, metalness);
 
-	float3 lightSum = CalcAllLights(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness, metalness, specular);
+	float3 lightSum = CalcAllLights(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness, metalness, specular, 1);
 	float3 finalColor = pow(lightSum, 1 / 2.2f);
 	
 	return float4(finalColor, 1.0f);

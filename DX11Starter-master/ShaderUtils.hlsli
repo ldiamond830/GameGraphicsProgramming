@@ -264,7 +264,7 @@ float3 PointLight(Light light, float3 albedo, float3 normal, float3 cameraPositi
 
 
 
-float3 CalcAllLights(Light lights[5], float3 albedo, float3 normal, float3 cameraPosition, float3 worldPosition, float roughness, float metalness, float3 f0)
+float3 CalcAllLights(Light lights[5], float3 albedo, float3 normal, float3 cameraPosition, float3 worldPosition, float roughness, float metalness, float3 f0, float shadowAmount)
 {
     float3 lightSum = 0;
     for (int i = 0; i < 5; i++)
@@ -272,7 +272,16 @@ float3 CalcAllLights(Light lights[5], float3 albedo, float3 normal, float3 camer
         switch (lights[i].type)
         {
             case LIGHT_TYPE_DIRECTIONAL:
-                lightSum += DirectionalLight(lights[i], albedo, normal, cameraPosition, worldPosition, roughness, metalness, f0);
+            //first direction light is the only one shadows should be cast using
+                if (i == 0)
+                {
+                    lightSum += DirectionalLight(lights[i], albedo, normal, cameraPosition, worldPosition, roughness, metalness, f0) * shadowAmount;
+                }
+                else
+                {
+                    lightSum += DirectionalLight(lights[i], albedo, normal, cameraPosition, worldPosition, roughness, metalness, f0);
+                }
+            
                 break;
             case LIGHT_TYPE_POINT:
                 lightSum += PointLight(lights[i], albedo, normal, cameraPosition, worldPosition, roughness, metalness, f0);

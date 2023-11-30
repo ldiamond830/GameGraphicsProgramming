@@ -6,6 +6,7 @@ Texture2D RoughnessMap : register(t2);
 Texture2D MetalnessMap : register(t3);
 Texture2D ShadowMap : register(t4);
 SamplerState SamplerOptions : register(s0); // "s" registers for sampler
+SamplerState ShadowSampler : register(s1);
 
 cbuffer buffer : register(b0) {
 	float3 colorTint;
@@ -40,10 +41,10 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 	shadowUV.y = 1 - shadowUV.y; // Flip the Y
 	// Grab the distances we need: light-to-pixel and closest-surface
 	float distToLight = input.shadowMapPos.z;
-	float distShadowMap = ShadowMap.Sample(SamplerOptions, shadowUV).r;
-	// For testing, just return black where there are shadows.
-	if (distShadowMap < distToLight)
-	return float4(0, 0, 0, 1);
+	float distShadowMap = ShadowMap.Sample(ShadowSampler, shadowUV).r;
+
+	// Get a ratio of comparison results using SampleCmpLevelZero()
+	float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, distToLight).r;
 
 	float3 surfaceColor = pow(Albedo.Sample(SamplerOptions, (input.uv + textureOffset) * textureScale).rgb, 2.2f);
 	surfaceColor *= colorTint;
@@ -66,7 +67,7 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 	// because of linear texture sampling, so we lerp the specular color to match
 	float3 specular = lerp(F0_NON_METAL, surfaceColor.rgb, metalness);
 
-	float3 lightSum = CalcAllLights(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness, metalness, specular);
+	float3 lightSum = CalcAllLights(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness, metalness, specular, shadowAmount);
 	float3 finalColor = pow(lightSum, 1/2.2f);
 
 	return float4(finalColor, 1.0f);

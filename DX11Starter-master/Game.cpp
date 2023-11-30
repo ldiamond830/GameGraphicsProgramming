@@ -422,6 +422,14 @@ void Game::InitShadowMapResources()
 	shadowRastDesc.SlopeScaledDepthBias = 1.0f; // Bias more based on slope
 	device->CreateRasterizerState(&shadowRastDesc, &shadowRasterizer);
 
+	D3D11_SAMPLER_DESC shadowSampDesc = {};
+	shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	shadowSampDesc.ComparisonFunc = D3D11_COMPARISON_LESS;
+	shadowSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSampDesc.BorderColor[0] = 1.0f; // Only need the first component
+	device->CreateSamplerState(&shadowSampDesc, &shadowSampler);
 
 	//XMMATRIX fromLightView = XMMatrixLookToLH(-XMLoadFloat3(&sun.direction) * 20, XMLoadFloat3(&sun.direction), XMVectorSet(0, 1, 0, 0));
 	//XMStoreFloat4x4(&lightViewMatrix, fromLightView);
@@ -557,6 +565,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		entityList[i]->GetMaterial()->GetPixelShader()->SetFloat3("ambient", ambientColor);
 		entityList[i]->GetMaterial()->GetPixelShader()->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
 		entityList[i]->GetMaterial()->GetPixelShader()->SetShaderResourceView("ShadowMap", shadowSRV);
+		entityList[i]->GetMaterial()->GetPixelShader()->SetSamplerState("ShadowSampler", shadowSampler);
 		entityList[i]->GetMaterial()->GetVertexShader()->SetMatrix4x4("lightView", lightViewMatrix);
 		entityList[i]->GetMaterial()->GetVertexShader()->SetMatrix4x4("lightProjection", lightProjectionMatrix);
 		entityList[i]->Draw(colorTint, context, currentCamera);
