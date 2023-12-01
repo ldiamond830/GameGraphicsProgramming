@@ -88,6 +88,6 @@ private:
 	DirectX::XMFLOAT4X4 lightViewMatrix;
 	DirectX::XMFLOAT4X4 lightProjectionMatrix;
 	float lightProjectionSize = 15.0f;
-	int shadowMapResolution = 1024;
+	int shadowMapResolution = 2048;
 };
 

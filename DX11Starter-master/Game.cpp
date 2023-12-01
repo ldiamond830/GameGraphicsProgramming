@@ -576,6 +576,11 @@ void Game::Draw(float deltaTime, float totalTime)
 	// Frame END
 	// - These should happen exactly ONCE PER FRAME
 	// - At the very end of the frame (after drawing *everything*)
+	
+	//unbind all SRVs
+	ID3D11ShaderResourceView* nullSRVs[128] = {};
+	context->PSSetShaderResources(0, 128, nullSRVs);
+
 	{
 		// Present the back buffer to the user
 		//  - Puts the results of what we've drawn onto the window
