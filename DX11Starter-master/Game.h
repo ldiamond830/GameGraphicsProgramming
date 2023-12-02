@@ -87,7 +87,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> shadowSampler;
 	DirectX::XMFLOAT4X4 lightViewMatrix;
 	DirectX::XMFLOAT4X4 lightProjectionMatrix;
-	float lightProjectionSize = 15.0f;
+	float lightProjectionSize = 24.0f;
 	int shadowMapResolution = 2048;
 };
 

@@ -101,6 +101,11 @@ void Game::Init()
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> paintMetalResource;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> paintRoughResource;
 
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodAlbedoResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodNormalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodMetalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodRoughResource;
+
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/rock.png").c_str(), nullptr, marbleTextureResouce.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/brick.png").c_str(), nullptr, brickTextureResouce.GetAddressOf());
 
@@ -124,6 +129,11 @@ void Game::Init()
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/paint_normals.png").c_str(), nullptr, paintNormalResource.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/paint_metal.png").c_str(), nullptr, paintMetalResource.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/paint_roughness.png").c_str(), nullptr, paintRoughResource.GetAddressOf());
+
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/wood_albedo.png").c_str(), nullptr, woodAlbedoResource.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/wood_normals.png").c_str(), nullptr, woodNormalResource.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/wood_metal.png").c_str(), nullptr, woodMetalResource.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/wood_roughness.png").c_str(), nullptr, woodRoughResource.GetAddressOf());
 	
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
@@ -171,6 +181,12 @@ void Game::Init()
 	materialList[5]->AddSample("SamplerOptions", samplerState);
 	
 
+	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), normalMapPixelShader, normalMapVertexShader)));
+	materialList[6]->AddTextureSRV("Albedo", woodAlbedoResource);
+	materialList[6]->AddTextureSRV("NormalMap", woodNormalResource);
+	materialList[6]->AddTextureSRV("MetalnessMap", woodMetalResource);
+	materialList[6]->AddTextureSRV("RoughnessMap", woodRoughResource);
+	materialList[6]->AddSample("SamplerOptions", samplerState);
 	//materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));
 	CreateGeometry();
 	
@@ -368,7 +384,7 @@ void Game::CreateGeometry()
 	entityList[3]->GetTransform()->SetPosition(7.0f, 0.5f, 0.0f);
 
 	//floor
-	entityList.push_back(std::make_shared<Entity>(Entity(cube, materialList[2])));
+	entityList.push_back(std::make_shared<Entity>(Entity(cube, materialList[6])));
 	entityList[4]->GetTransform()->SetPosition(0.0f, -3.5f, 0.0f);
 	entityList[4]->GetTransform()->SetScale(20.0f, 1.0f, 20.0f);
 	skyBox = make_shared<Sky>(Sky(cube, samplerState, device, context, skyPixelShader, skyVertexShader, FixPath(L"../../Assets/Textures/Sky/right.png").c_str(), FixPath(L"../../Assets/Textures/Sky/left.png").c_str(),
