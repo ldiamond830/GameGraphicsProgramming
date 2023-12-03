@@ -450,7 +450,7 @@ void Game::InitShadowMapResources()
 	//XMMATRIX fromLightView = XMMatrixLookToLH(-XMLoadFloat3(&sun.direction) * 20, XMLoadFloat3(&sun.direction), XMVectorSet(0, 1, 0, 0));
 	//XMStoreFloat4x4(&lightViewMatrix, fromLightView);
 	XMMATRIX shView = XMMatrixLookAtLH(
-		XMVectorSet(0, 20, -20, 0),
+		XMVectorSet(0, sun.direction.x * 20, sun.direction.y * 20, sun.direction.z * 20),
 		XMVectorSet(0, 0, 0, 0),
 		XMVectorSet(0, 1, 0, 0));
 	XMStoreFloat4x4(&lightViewMatrix, shView);
