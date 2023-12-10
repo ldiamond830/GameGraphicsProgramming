@@ -230,6 +230,7 @@ float3 DirectionalLight(Light light, float3 albedo, float3 normal, float3 camera
     float3 directionToLight = normalize(-light.direction);
     float3 directionToCamera = normalize(cameraPosition - pixelWorldPosition);
     
+    return float3(Diffuse(normal, directionToLight), 0, 0);
     float diffuseColor = DiffusePBR(normal, normalize(light.direction * -1));
 
     float3 F; //out variable for use in calculating conservation of energy
@@ -243,11 +244,34 @@ float3 DirectionalLight(Light light, float3 albedo, float3 normal, float3 camera
     return (balancedDiff * albedo + specularColor) * light.intensity * light.color;
 }
 
+float3 DirectionalLightCel(Light light, float3 albedo, float3 normal, float3 cameraPosition, float3 pixelWorldPosition, float roughness, float metalness, float3 specularInputColor, Texture2D ramp, SamplerState samplerOptions)
+{
+    float3 directionToLight = normalize(-light.direction);
+    float3 directionToCamera = normalize(cameraPosition - pixelWorldPosition);
+   
+    //return float3(Diffuse(normal, directionToLight), 0, 0);
+    float2 rampUV = (Diffuse(normal, directionToLight), 0);
+    float diffuseColor = ramp.Sample(samplerOptions, rampUV).r;
+
+    float3 F; //out variable for use in calculating conservation of energy
+    //rampUV = float2(Specular(cameraPosition, pixelWorldPosition, normalize(light.direction * -1), normal, roughness), 0);
+    //float3 specularColor = ramp.Sample(samplerOptions, rampUV).r;
+    float3 specularColor = Specular(cameraPosition, pixelWorldPosition, directionToLight, normal, roughness);
+    // Calculate diffuse with energy conservation, including cutting diffuse for metals
+    //float3 balancedDiff = DiffuseEnergyConserve(diffuseColor, F, metalness);
+
+    //cuts specular when diffuse color is 0
+    //specularColor *= any(diffuseColor);
+    return (diffuseColor * albedo + specularColor) * light.intensity * light.color;
+}
+
+
 float3 PointLight(Light light, float3 albedo, float3 normal, float3 cameraPosition, float3 pixelWorldPosition, float roughness, float metalness, float3 specularInputColor)
 {
     float3 direction = normalize(light.position - pixelWorldPosition);
     
-    float diffuseColor = DiffusePBR(normal, normalize(direction));
+    
+    float diffuseColor = Diffuse(normal, normalize(direction));
 
     
     float3 F; //out variable for use in calculating conservation of energy
@@ -262,6 +286,25 @@ float3 PointLight(Light light, float3 albedo, float3 normal, float3 cameraPositi
     return ((balancedDiff * albedo + specularColor) * light.intensity * light.color) * attenuation;
 }
 
+float3 PointLightCel(Light light, float3 albedo, float3 normal, float3 cameraPosition, float3 pixelWorldPosition, float roughness, float metalness, float3 specularInputColor, Texture2D ramp, SamplerState samplerOptions)
+{
+    float3 direction = normalize(light.position - pixelWorldPosition);
+
+    float2 rampUV = (DiffusePBR(normal, normalize(light.direction * -1)), 0);
+    float diffuseColor = ramp.Sample(samplerOptions, rampUV).r;
+
+
+    float3 F; //out variable for use in calculating conservation of energy
+    float3 specularColor = MicrofacetBRDF(normal, direction, cameraPosition, roughness, specularInputColor, F);
+
+    // Calculate diffuse with energy conservation, including cutting diffuse for metals
+    float3 balancedDiff = DiffuseEnergyConserve(diffuseColor, F, metalness);
+
+    //cuts specular when diffuse color is 0
+    //specularColor *= any(diffuseColor);
+    float attenuation = Attenuate(light, pixelWorldPosition);
+    return ((balancedDiff * albedo + specularColor) * light.intensity * light.color) * attenuation;
+}
 
 
 float3 CalcAllLights(Light lights[5], float3 albedo, float3 normal, float3 cameraPosition, float3 worldPosition, float roughness, float metalness, float3 f0, float shadowAmount)
@@ -273,6 +316,7 @@ float3 CalcAllLights(Light lights[5], float3 albedo, float3 normal, float3 camer
         {
             case LIGHT_TYPE_DIRECTIONAL:
             //first direction light is the only one shadows should be cast using
+
                 if (i == 0)
                 {
                     lightSum += DirectionalLight(lights[i], albedo, normal, cameraPosition, worldPosition, roughness, metalness, f0) * shadowAmount;
@@ -289,6 +333,36 @@ float3 CalcAllLights(Light lights[5], float3 albedo, float3 normal, float3 camer
         }
     }
     
+    return lightSum;
+}
+
+float3 CalcAllLightsCel(Light lights[5], float3 albedo, float3 normal, float3 cameraPosition, float3 worldPosition, float roughness, float metalness, float3 f0, float shadowAmount, Texture2D ramp, SamplerState samplerOptions)
+{
+    float3 lightSum = 0;
+    for (int i = 0; i < 5; i++)
+    {
+        switch (lights[i].type)
+        {
+        case LIGHT_TYPE_DIRECTIONAL:
+            /*
+            //first direction light is the only one shadows should be cast using
+            if (i == 0)
+            {
+                lightSum += DirectionalLightCel(lights[i], albedo, normal, cameraPosition, worldPosition, roughness, metalness, f0, ramp, samplerOptions) * shadowAmount;
+            }
+            else
+            {
+                lightSum += DirectionalLightCel(lights[i], albedo, normal, cameraPosition, worldPosition, roughness, metalness, f0, ramp, samplerOptions);
+            }
+            */
+            lightSum += DirectionalLightCel(lights[i], albedo, normal, cameraPosition, worldPosition, roughness, metalness, f0, ramp, samplerOptions);
+            break;
+        case LIGHT_TYPE_POINT:
+            lightSum += PointLightCel(lights[i], albedo, normal, cameraPosition, worldPosition, roughness, metalness, f0, ramp, samplerOptions);
+            break;
+        }
+    }
+
     return lightSum;
 }
 

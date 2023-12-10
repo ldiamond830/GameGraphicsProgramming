@@ -55,6 +55,7 @@ private:
 	std::shared_ptr<SimpleVertexShader> normalMapVertexShader;
 	std::shared_ptr<SimpleVertexShader> skyVertexShader;
 	std::shared_ptr<SimpleVertexShader> shadowVertexShader;
+	std::shared_ptr<SimplePixelShader> celPixelShader;
 
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 
@@ -89,5 +90,9 @@ private:
 	DirectX::XMFLOAT4X4 lightProjectionMatrix;
 	float lightProjectionSize = 24.0f;
 	int shadowMapResolution = 2048;
+
+	//cel shader resource
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rampTexture;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> clampSampler;
 };
 

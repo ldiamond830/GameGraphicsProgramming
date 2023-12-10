@@ -78,6 +78,12 @@ void Game::Init()
 	samplerDescription.MaxLOD = D3D11_FLOAT32_MAX;
 	device->CreateSamplerState(&samplerDescription, samplerState.GetAddressOf());
 
+	//clamp sampler for cel shader
+	samplerDescription.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDescription.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDescription.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	device->CreateSamplerState(&samplerDescription, clampSampler.GetAddressOf());
+
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> marbleTextureResouce;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> brickTextureResouce;
 
@@ -105,6 +111,7 @@ void Game::Init()
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodNormalResource;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodMetalResource;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodRoughResource;
+
 
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/rock.png").c_str(), nullptr, marbleTextureResouce.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/brick.png").c_str(), nullptr, brickTextureResouce.GetAddressOf());
@@ -134,6 +141,8 @@ void Game::Init()
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/wood_normals.png").c_str(), nullptr, woodNormalResource.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/wood_metal.png").c_str(), nullptr, woodMetalResource.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/PBR/wood_roughness.png").c_str(), nullptr, woodRoughResource.GetAddressOf());
+
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/rampTexture2Band.png").c_str(), nullptr, rampTexture.GetAddressOf());
 	
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), defaultPixelShader, vertexShader)));
@@ -187,6 +196,15 @@ void Game::Init()
 	materialList[6]->AddTextureSRV("MetalnessMap", woodMetalResource);
 	materialList[6]->AddTextureSRV("RoughnessMap", woodRoughResource);
 	materialList[6]->AddSample("SamplerOptions", samplerState);
+
+	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), celPixelShader, normalMapVertexShader)));
+	materialList[7]->AddTextureSRV("Albedo", woodAlbedoResource);
+	materialList[7]->AddTextureSRV("NormalMap", woodNormalResource);
+	materialList[7]->AddTextureSRV("MetalnessMap", woodMetalResource);
+	materialList[7]->AddTextureSRV("RoughnessMap", woodRoughResource);
+	materialList[7]->AddTextureSRV("RampTexture", rampTexture);
+	materialList[7]->AddSample("SamplerOptions", samplerState);
+	materialList[7]->AddSample("ClampSampler", clampSampler);
 	//materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));
 	CreateGeometry();
 	
@@ -243,23 +261,23 @@ void Game::Init()
 	directionalLight2.type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight2.direction = XMFLOAT3(-1.0f, 0.0f, 0.0f);
 	directionalLight2.color = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	directionalLight2.intensity = 0.75f;
+	directionalLight2.intensity = 0.0f;
 
 	directionalLight3.type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight3.direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
 	directionalLight3.color = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	directionalLight3.intensity = 1.0f;
+	directionalLight3.intensity = 0.0f;
 
 	pointLight1.type = LIGHT_TYPE_POINT;
 	pointLight1.position = XMFLOAT3(0.0f, -1.0f, 0.0f);
 	pointLight1.color = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	pointLight1.intensity = 1.0f;
+	pointLight1.intensity = 0.0f;
 	pointLight1.range = 5.0f;
 
 	pointLight2.type = LIGHT_TYPE_POINT;
 	pointLight2.position = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	pointLight2.color = XMFLOAT3(1.0f, 1.0f, 0.0f);
-	pointLight2.intensity = 1.0f;
+	pointLight2.intensity = 0.0f;
 	pointLight2.range = 10.0f;
 
 	lights.push_back(sun);
@@ -297,6 +315,8 @@ void Game::LoadShaders()
 		FixPath(L"SkyPixelShader.cso").c_str());
 	shadowVertexShader = std::make_shared<SimpleVertexShader>(device, context,
 		FixPath(L"ShadowVertexShader.cso").c_str());
+	celPixelShader = std::make_shared<SimplePixelShader>(device, context,
+		FixPath(L"CelPixelShader.cso").c_str());
 }
 
 
@@ -382,11 +402,14 @@ void Game::CreateGeometry()
 
 	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[3])));
 	entityList[3]->GetTransform()->SetPosition(7.0f, 0.5f, 0.0f);
+	
+	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[7])));
+	entityList[4]->GetTransform()->SetPosition(-7.0f, 0.5f, 0.0f);
 
 	//floor
 	entityList.push_back(std::make_shared<Entity>(Entity(cube, materialList[6])));
-	entityList[4]->GetTransform()->SetPosition(0.0f, -3.5f, 0.0f);
-	entityList[4]->GetTransform()->SetScale(20.0f, 1.0f, 20.0f);
+	entityList[5]->GetTransform()->SetPosition(0.0f, -3.5f, 0.0f);
+	entityList[5]->GetTransform()->SetScale(20.0f, 1.0f, 20.0f);
 	skyBox = make_shared<Sky>(Sky(cube, samplerState, device, context, skyPixelShader, skyVertexShader, FixPath(L"../../Assets/Textures/Sky/right.png").c_str(), FixPath(L"../../Assets/Textures/Sky/left.png").c_str(),
 		FixPath(L"../../Assets/Textures/Sky/up.png").c_str(), FixPath(L"../../Assets/Textures/Sky/down.png").c_str(), FixPath(L"../../Assets/Textures/Sky/front.png").c_str(), FixPath(L"../../Assets/Textures/Sky/back.png").c_str()));
 }
@@ -543,9 +566,11 @@ void Game::Update(float deltaTime, float totalTime)
 
 	//Update Geometery
 	//skips updating the floor
+	/*
 	for(int i =0; i < entityList.size() - 1; i++){
 		entityList[i]->GetTransform()->MoveAbsolute(sin(totalTime) * deltaTime, 0, 0);
 	}
+	*/
 	currentCamera->Update(deltaTime);
 
 	// Example input checking: Quit if the escape key is pressed
@@ -578,10 +603,11 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - These steps are generally repeated for EACH object you draw
 	// - Other Direct3D calls will also be necessary to do more complex things
 	for (int i = 0; i < entityList.size(); i++) {
-		entityList[i]->GetMaterial()->GetPixelShader()->SetFloat3("ambient", ambientColor);
-		entityList[i]->GetMaterial()->GetPixelShader()->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
-		entityList[i]->GetMaterial()->GetPixelShader()->SetShaderResourceView("ShadowMap", shadowSRV);
-		entityList[i]->GetMaterial()->GetPixelShader()->SetSamplerState("ShadowSampler", shadowSampler);
+		auto ps = entityList[i]->GetMaterial()->GetPixelShader();
+		ps->SetFloat3("ambient", ambientColor);
+		ps->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
+		ps->SetShaderResourceView("ShadowMap", shadowSRV);
+		ps->SetSamplerState("ShadowSampler", shadowSampler);
 		entityList[i]->GetMaterial()->GetVertexShader()->SetMatrix4x4("lightView", lightViewMatrix);
 		entityList[i]->GetMaterial()->GetVertexShader()->SetMatrix4x4("lightProjection", lightProjectionMatrix);
 		entityList[i]->Draw(colorTint, context, currentCamera);
