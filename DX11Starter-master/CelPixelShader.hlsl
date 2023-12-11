@@ -36,18 +36,6 @@ cbuffer buffer : register(b0) {
 // --------------------------------------------------------
 float4 main(VertexToPixelNormalMap input) : SV_TARGET
 {
-	//return float4(RampTexture.Sample(SamplerOptions, input.uv).r, 0, 0, 1);
-	// Perform the perspective divide (divide by W) ourselves
-	input.shadowMapPos /= input.shadowMapPos.w;
-	// Convert the normalized device coordinates to UVs for sampling
-	float2 shadowUV = input.shadowMapPos.xy * 0.5f + 0.5f;
-	shadowUV.y = 1 - shadowUV.y; // Flip the Y
-	// Grab the distances we need: light-to-pixel and closest-surface
-	float distToLight = input.shadowMapPos.z;
-
-	// Get a ratio of comparison results using SampleCmpLevelZero()
-	float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, distToLight).r;
-
 	float3 surfaceColor = pow(Albedo.Sample(SamplerOptions, (input.uv + textureOffset) * textureScale).rgb, 2.2f);
 	surfaceColor *= colorTint;
 
@@ -71,7 +59,7 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 		case LIGHT_TYPE_DIRECTIONAL:
 			diffuse = Diffuse(input.normal, normalize(-lights[i].direction));
 			diffuse = RampTexture.Sample(ClampSampler, float2(diffuse, 0));
-			spec = Specular(cameraPosition, input.worldPosition, lights[i].direction, input.normal, 0.0f);
+			spec = Specular(cameraPosition, input.worldPosition, lights[i].direction, input.normal, 0.01f);
 			lightSum += (diffuse * surfaceColor + spec) * lights[i].intensity * lights[i].color;
 			
 			break;
@@ -80,18 +68,15 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 			diffuse = Diffuse(input.normal, direction);
 			diffuse = RampTexture.Sample(ClampSampler, float2(diffuse, 0));
 
-			spec = Specular(cameraPosition, input.worldPosition, normalize(lights[i].position - input.worldPosition), input.normal, 0.0f);
+			spec = Specular(cameraPosition, input.worldPosition, normalize(lights[i].position - input.worldPosition), input.normal, 1.0f);
 
 			float attenuation = Attenuate(lights[i], input.worldPosition);
 			
 			lightSum += ((diffuse * surfaceColor + spec) * lights[i].intensity * lights[0].color) * attenuation;
-			//lightSum += PointLight(lights[i], surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness, metalness, f0);
 			break;
 		}
 		
 	}
-
-	
 
 	//gamma correct
 	float3 finalColor = pow(lightSum, 1 / 2.2f);
