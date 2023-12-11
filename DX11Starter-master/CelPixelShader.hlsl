@@ -62,18 +62,38 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 
 	input.normal = mul(unpackedNormal, TBN);
 
-	float roughness = RoughnessMap.Sample(SamplerOptions, input.uv).r;
-	float metalness = MetalnessMap.Sample(SamplerOptions, input.uv).r;
-	// Assume albedo texture is actually holding specular color where metalness == 1
-	// Note the use of lerp here - metal is generally 0 or 1, but might be in between
-	// because of linear texture sampling, so we lerp the specular color to match
-	float3 specular = lerp(F0_NON_METAL, surfaceColor.rgb, metalness);
+	float3 lightSum;
+	for (int i = 0; i < 5; i++) {
+		float diffuse;
+		float spec = 0;
+		switch (lights[i].type)
+		{
+		case LIGHT_TYPE_DIRECTIONAL:
+			diffuse = Diffuse(input.normal, normalize(-lights[i].direction));
+			diffuse = RampTexture.Sample(ClampSampler, float2(diffuse, 0));
+			spec = Specular(cameraPosition, input.worldPosition, lights[i].direction, input.normal, 0.0f);
+			lightSum += (diffuse * surfaceColor + spec) * lights[i].intensity * lights[i].color;
+			
+			break;
+		case LIGHT_TYPE_POINT:
+			float3 direction = normalize(lights[0].position - input.worldPosition);
+			diffuse = Diffuse(input.normal, direction);
+			diffuse = RampTexture.Sample(ClampSampler, float2(diffuse, 0));
 
-	//float3 lightSum = CalcAllLightsCel(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness, metalness, specular, shadowAmount, RampTexture, ClampSampler);
-	float diffuse = Diffuse(input.normal, normalize(-lights[0].direction));
-	diffuse = RampTexture.Sample(ClampSampler, float2(diffuse, 0));
-	float spec = Specular(cameraPosition, input.worldPosition, normalize(cameraPosition - input.worldPosition), input.normal, 0.5f);
-	float3 lightSum = (diffuse * surfaceColor + spec) * lights[0].intensity * lights[0].color;
+			spec = Specular(cameraPosition, input.worldPosition, normalize(lights[i].position - input.worldPosition), input.normal, 0.0f);
+
+			float attenuation = Attenuate(lights[i], input.worldPosition);
+			
+			lightSum += ((diffuse * surfaceColor + spec) * lights[i].intensity * lights[0].color) * attenuation;
+			//lightSum += PointLight(lights[i], surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness, metalness, f0);
+			break;
+		}
+		
+	}
+
+	
+
+	//gamma correct
 	float3 finalColor = pow(lightSum, 1 / 2.2f);
 
 	return float4(finalColor, 1.0f);

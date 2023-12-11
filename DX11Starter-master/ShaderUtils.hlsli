@@ -270,7 +270,7 @@ float3 PointLight(Light light, float3 albedo, float3 normal, float3 cameraPositi
     float3 direction = normalize(light.position - pixelWorldPosition);
     
     
-    float diffuseColor = Diffuse(normal, normalize(direction));
+    float diffuseColor = DiffusePBR(normal, normalize(direction));
 
     
     float3 F; //out variable for use in calculating conservation of energy
