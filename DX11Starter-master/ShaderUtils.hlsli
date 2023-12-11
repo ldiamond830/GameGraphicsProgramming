@@ -230,7 +230,6 @@ float3 DirectionalLight(Light light, float3 albedo, float3 normal, float3 camera
     float3 directionToLight = normalize(-light.direction);
     float3 directionToCamera = normalize(cameraPosition - pixelWorldPosition);
     
-    return float3(Diffuse(normal, directionToLight), 0, 0);
     float diffuseColor = DiffusePBR(normal, normalize(light.direction * -1));
 
     float3 F; //out variable for use in calculating conservation of energy
@@ -249,12 +248,12 @@ float3 DirectionalLightCel(Light light, float3 albedo, float3 normal, float3 cam
     float3 directionToLight = normalize(-light.direction);
     float3 directionToCamera = normalize(cameraPosition - pixelWorldPosition);
    
-    //return float3(Diffuse(normal, directionToLight), 0, 0);
+    return float3(Diffuse(normal, directionToLight), 0, 0);
     float2 rampUV = (Diffuse(normal, directionToLight), 0);
     float diffuseColor = ramp.Sample(samplerOptions, rampUV).r;
 
     float3 F; //out variable for use in calculating conservation of energy
-    //rampUV = float2(Specular(cameraPosition, pixelWorldPosition, normalize(light.direction * -1), normal, roughness), 0);
+    //rampUV = float2(Specular(cameraPosition, pixelWorldPosition, directionToLight, normal, roughness), 0);
     //float3 specularColor = ramp.Sample(samplerOptions, rampUV).r;
     float3 specularColor = Specular(cameraPosition, pixelWorldPosition, directionToLight, normal, roughness);
     // Calculate diffuse with energy conservation, including cutting diffuse for metals

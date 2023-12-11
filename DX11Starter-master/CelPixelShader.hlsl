@@ -69,7 +69,11 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 	// because of linear texture sampling, so we lerp the specular color to match
 	float3 specular = lerp(F0_NON_METAL, surfaceColor.rgb, metalness);
 
-	float3 lightSum = CalcAllLightsCel(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness, metalness, specular, shadowAmount, RampTexture, ClampSampler);
+	//float3 lightSum = CalcAllLightsCel(lights, surfaceColor, input.normal, cameraPosition, input.worldPosition, roughness, metalness, specular, shadowAmount, RampTexture, ClampSampler);
+	float diffuse = Diffuse(input.normal, normalize(-lights[0].direction));
+	diffuse = RampTexture.Sample(ClampSampler, float2(diffuse, 0));
+	float spec = Specular(cameraPosition, input.worldPosition, normalize(cameraPosition - input.worldPosition), input.normal, 0.5f);
+	float3 lightSum = (diffuse * surfaceColor + spec) * lights[0].intensity * lights[0].color;
 	float3 finalColor = pow(lightSum, 1 / 2.2f);
 
 	return float4(finalColor, 1.0f);
