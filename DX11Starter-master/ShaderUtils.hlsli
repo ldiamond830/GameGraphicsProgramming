@@ -81,7 +81,7 @@ float Diffuse(float3 normal, float3 dirToLight)
     return saturate(dot(normal, dirToLight));
 }
 
-//phong specular calculation, no longer in use
+//phong specular calculation
 float Specular(float3 cameraPosition, float3 pixelWorldPosition, float3 incomingLightDirection, float3 normal, float roughness)
 {
     

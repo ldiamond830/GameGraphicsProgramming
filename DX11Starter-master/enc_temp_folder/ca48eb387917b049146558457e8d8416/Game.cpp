@@ -552,7 +552,7 @@ void Game::Update(float deltaTime, float totalTime)
 	// Show the demo window
 	//ImGui::ShowDemoWindow();
 
-	ImGui::Begin("Debug Controls");
+	ImGui::Begin("Assignment 7");
 	ImGui::Text("Framerate %f", ImGui::GetIO().Framerate);
 	ImGui::Text("Width: %i", windowWidth);
 	ImGui::Text("Height: %i", windowHeight);

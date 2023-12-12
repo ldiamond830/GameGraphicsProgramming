@@ -2,9 +2,6 @@
 
 Texture2D Albedo : register(t0); // "t" registers for textures
 Texture2D NormalMap : register(t1);
-Texture2D RoughnessMap : register(t2);
-Texture2D MetalnessMap : register(t3);
-Texture2D ShadowMap : register(t4);
 Texture2D RampTexture : register(t5);
 SamplerState SamplerOptions : register(s0); // "s" registers for sampler
 SamplerState ClampSampler : register(s1); // "s" registers for sampler
@@ -59,16 +56,18 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 		case LIGHT_TYPE_DIRECTIONAL:
 			diffuse = Diffuse(input.normal, normalize(-lights[i].direction));
 			diffuse = RampTexture.Sample(ClampSampler, float2(diffuse, 0));
-			spec = Specular(cameraPosition, input.worldPosition, lights[i].direction, input.normal, 0.01f);
+
+			spec = Specular(cameraPosition, input.worldPosition, lights[i].direction, input.normal, 0.95f);
+			
 			lightSum += (diffuse * surfaceColor + spec) * lights[i].intensity * lights[i].color;
 			
 			break;
 		case LIGHT_TYPE_POINT:
-			float3 direction = normalize(lights[0].position - input.worldPosition);
+			float3 direction = normalize(lights[i].position - input.worldPosition);
 			diffuse = Diffuse(input.normal, direction);
 			diffuse = RampTexture.Sample(ClampSampler, float2(diffuse, 0));
 
-			spec = Specular(cameraPosition, input.worldPosition, normalize(lights[i].position - input.worldPosition), input.normal, 1.0f);
+			spec = Specular(cameraPosition, input.worldPosition, direction, input.normal, 1.0f);
 
 			float attenuation = Attenuate(lights[i], input.worldPosition);
 			
