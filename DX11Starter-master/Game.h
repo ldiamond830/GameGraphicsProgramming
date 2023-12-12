@@ -92,6 +92,6 @@ private:
 	int shadowMapResolution = 2048;
 
 	//cel shader resource
-	Microsoft::WRL::ComPtr<ID3D11SamplerState> clampSampler;
+	
 };
 

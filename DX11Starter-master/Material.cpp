@@ -25,6 +25,11 @@ void Material::SetVertexShader(std::shared_ptr<SimpleVertexShader> newVertexShad
     vertexShader = newVertexShader;
 }
 
+void Material::SetRoughness(float newRoughness)
+{
+    roughness = newRoughness;
+}
+
 DirectX::XMFLOAT3 Material::GetColorTint()
 {
     return colorTint;

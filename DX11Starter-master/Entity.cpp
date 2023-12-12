@@ -1,5 +1,5 @@
 #include "Entity.h"
-
+#include <iostream>
 Entity::Entity(std::shared_ptr<Mesh> _mesh, std::shared_ptr <Material> _material)
 {
 	mesh = _mesh;

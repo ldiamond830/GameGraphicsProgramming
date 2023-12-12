@@ -70,6 +70,8 @@ void Game::Init()
 	//  - You'll be expanding and/or replacing these later
 	LoadShaders();
 	
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> clampSampler;
+
 	D3D11_SAMPLER_DESC samplerDescription = {};
 	samplerDescription.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDescription.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -112,6 +114,7 @@ void Game::Init()
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodMetalResource;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodRoughResource;
 
+	//cel shading resources
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rampTexture2Band;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rampTexture3Band;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rampTexture4Band;
@@ -219,6 +222,7 @@ void Game::Init()
 	materialList[8]->AddTextureSRV("RampTexture", rampTexture2Band);
 	materialList[8]->AddSample("SamplerOptions", samplerState);
 	materialList[8]->AddSample("ClampSampler", clampSampler);
+	materialList[8]->SetRoughness(1.0f);
 
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), celPixelShader, normalMapVertexShader)));
 	materialList[9]->AddTextureSRV("Albedo", bronzeAlbedoResource);
@@ -226,6 +230,7 @@ void Game::Init()
 	materialList[9]->AddTextureSRV("RampTexture", rampTexture2Band);
 	materialList[9]->AddSample("SamplerOptions", samplerState);
 	materialList[9]->AddSample("ClampSampler", clampSampler);
+	materialList[9]->SetRoughness(0.9f);
 
 	materialList.push_back(make_shared<Material>(Material(XMFLOAT3(1.0f, 1.0f, 1.0f), celPixelShader, normalMapVertexShader)));
 	materialList[10]->AddTextureSRV("Albedo", redAlbedo);
@@ -233,6 +238,9 @@ void Game::Init()
 	materialList[10]->AddTextureSRV("RampTexture", rampTexture4Band);
 	materialList[10]->AddSample("SamplerOptions", samplerState);
 	materialList[10]->AddSample("ClampSampler", clampSampler);
+
+	auto a = materialList[8]->GetRoughness();
+	auto b = materialList[9]->GetRoughness();
 	//materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));
 	CreateGeometry();
 	
@@ -297,7 +305,7 @@ void Game::Init()
 	directionalLight3.intensity = 0.0f;
 
 	pointLight1.type = LIGHT_TYPE_POINT;
-	pointLight1.position = XMFLOAT3(0.0f, -1.0f, 0.0f);
+	pointLight1.position = XMFLOAT3(-6.0f, 0.0f, 0.0f);
 	pointLight1.color = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	pointLight1.intensity = 0.0f;
 	pointLight1.range = 5.0f;
@@ -431,7 +439,7 @@ void Game::CreateGeometry()
 	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[3])));
 	entityList[3]->GetTransform()->SetPosition(7.0f, 0.5f, 0.0f);
 	
-	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[7])));
+	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[8])));
 	entityList[4]->GetTransform()->SetPosition(-7.0f, 0.5f, 0.0f);
 
 	entityList.push_back(std::make_shared<Entity>(Entity(sphere, materialList[9])));

@@ -21,6 +21,7 @@ public:
 	void SetColorTint(DirectX::XMFLOAT3 newTint);
 	void SetPixelShader(std::shared_ptr<SimplePixelShader> newPixelShader);
 	void SetVertexShader(std::shared_ptr<SimpleVertexShader> newVertexShader);
+	void SetRoughness(float newRoughness);
 
 	DirectX::XMFLOAT3 GetColorTint();
 	std::shared_ptr<SimplePixelShader> GetPixelShader();

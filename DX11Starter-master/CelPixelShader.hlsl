@@ -8,6 +8,7 @@ SamplerState ClampSampler : register(s1); // "s" registers for sampler
 SamplerComparisonState ShadowSampler : register(s1);
 
 cbuffer buffer : register(b0) {
+	float roughness;
 	float3 colorTint;
 	float3 cameraPosition;
 	float3 ambient;
@@ -54,10 +55,11 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 		switch (lights[i].type)
 		{
 		case LIGHT_TYPE_DIRECTIONAL:
+			//uses standard diffuse calculatuions to sample a ramp texture with bands of color to control actual diffuse shading
 			diffuse = Diffuse(input.normal, normalize(-lights[i].direction));
 			diffuse = RampTexture.Sample(ClampSampler, float2(diffuse, 0));
 
-			spec = Specular(cameraPosition, input.worldPosition, lights[i].direction, input.normal, 0.95f);
+			spec = Specular(cameraPosition, input.worldPosition, normalize(lights[i].direction), input.normal, roughness);
 			
 			lightSum += (diffuse * surfaceColor + spec) * lights[i].intensity * lights[i].color;
 			
@@ -67,7 +69,7 @@ float4 main(VertexToPixelNormalMap input) : SV_TARGET
 			diffuse = Diffuse(input.normal, direction);
 			diffuse = RampTexture.Sample(ClampSampler, float2(diffuse, 0));
 
-			spec = Specular(cameraPosition, input.worldPosition, direction, input.normal, 1.0f);
+			spec = Specular(cameraPosition, input.worldPosition, direction, input.normal, roughness);
 
 			float attenuation = Attenuate(lights[i], input.worldPosition);
 			
