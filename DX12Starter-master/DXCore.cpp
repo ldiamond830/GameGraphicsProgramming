@@ -53,7 +53,8 @@ DXCore::DXCore(
 	deltaTime(0),
 	startTime(0),
 	totalTime(0),
-	hWnd(0)
+	hWnd(0),
+	rtvHandles{}
 {
 	// Save a static reference to this object.
 	//  - Since the OS-level message function must be a non-member (global) function, 
@@ -70,7 +71,7 @@ DXCore::DXCore(
 	currentSwapBuffer = 0;
 	rtvDescriptorSize = 0;
 	dsvHandle = {};
-	//rtvHandles = {};
+	
 	scissorRect = {};
 }
 
