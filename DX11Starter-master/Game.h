@@ -36,6 +36,8 @@ private:
 	void LoadShaders();
 	void CreateGeometry();
 	void InitShadowMapResources();
+	void InitPostProcessResources();
+	void ResizePostProcessResources();
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
@@ -91,7 +93,14 @@ private:
 	float lightProjectionSize = 24.0f;
 	int shadowMapResolution = 2048;
 
-	//cel shader resource
+	// Resources that are shared among all post processes
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> ppSampler;
+	std::shared_ptr<SimpleVertexShader> ppVS;
+	// Resources that are tied to a particular post process
+	std::shared_ptr<SimplePixelShader> ppPS;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> ppRTV; // For rendering
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ppSRV; // For sampling
+	int blurRadius = 0;
 	
 };
 
