@@ -1,8 +1,12 @@
 #pragma once
 
 #include "DXCore.h"
+#include "Camera.h"
+#include "Entity.h"
 #include <DirectXMath.h>
 #include <wrl/client.h> // Used for ComPtr - a smart pointer for COM objects
+#include <memory>
+#include <vector>
 
 class Game 
 	: public DXCore
@@ -38,5 +42,9 @@ private:
 
 	D3D12_VERTEX_BUFFER_VIEW vbView;
 	D3D12_INDEX_BUFFER_VIEW ibView;
+
+	std::shared_ptr<Camera> mainCamera;
+	std::vector<std::shared_ptr<Entity>> entityList;
+
 };
 

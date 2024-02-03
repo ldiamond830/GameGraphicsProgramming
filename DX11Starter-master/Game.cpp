@@ -659,7 +659,9 @@ void Game::Update(float deltaTime, float totalTime)
 	ImGui::Text("Width: %i", windowWidth);
 	ImGui::Text("Height: %i", windowHeight);
 	ImGui::Image(shadowSRV.Get(), ImVec2(512, 512));
+
 	ImGui::SliderInt("Blur Radius", &blurRadius, 0, 100);
+
 	if (ImGui::Button("Next Camera")) {
 		mainCameraIndex = (mainCameraIndex + 1) % cameraList.size();
 		currentCamera = cameraList[mainCameraIndex];
