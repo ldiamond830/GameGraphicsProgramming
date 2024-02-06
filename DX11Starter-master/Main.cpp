@@ -2,6 +2,8 @@
 #include <Windows.h>
 #include "Game.h"
 
+//this is all starter code not my work
+
 // --------------------------------------------------------
 // Entry point for a graphical (non-console) Windows application
 // --------------------------------------------------------

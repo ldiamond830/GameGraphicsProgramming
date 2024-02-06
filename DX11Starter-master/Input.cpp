@@ -1,6 +1,8 @@
 #include "Input.h"
 #include <hidusage.h>
 
+//this is all starter code not my work
+
 // Singleton requirement
 Input* Input::instance;
 

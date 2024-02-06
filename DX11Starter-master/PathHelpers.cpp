@@ -5,6 +5,8 @@
 
 #include "PathHelpers.h"
 
+//this is all starter code not my work
+
 // --------------------------------------------------------------------------
 // Gets the actual path to this executable as a wide character string (wstring)
 //

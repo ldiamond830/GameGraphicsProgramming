@@ -1,5 +1,7 @@
 #include "SimpleShader.h"
 
+//this is all starter code not my work
+
 // Default error reporting state
 bool ISimpleShader::ReportErrors = false;
 bool ISimpleShader::ReportWarnings = false;
