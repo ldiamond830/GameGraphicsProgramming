@@ -65,9 +65,6 @@ Game::~Game()
 // --------------------------------------------------------
 void Game::Init()
 {
-	// Helper methods for loading shaders, creating some basic
-	// geometry to draw and some simple camera matrices.
-	//  - You'll be expanding and/or replacing these later
 	LoadShaders();
 	
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> clampSampler;
@@ -239,9 +236,6 @@ void Game::Init()
 	materialList[10]->AddSample("SamplerOptions", samplerState);
 	materialList[10]->AddSample("ClampSampler", clampSampler);
 
-	
-
-	//materialList.push_back(make_shared<Material>(Material(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), defaultPixelShader, vertexShader)));
 	CreateGeometry();
 	
 	// Set initial graphics API state
@@ -269,7 +263,6 @@ void Game::Init()
 	ImGui::CreateContext();
 	ImGui_ImplWin32_Init(hWnd);
 	ImGui_ImplDX11_Init(device.Get(), context.Get());
-	// Pick a style (uncomment one of these 3)
 	ImGui::StyleColorsDark();
 
 	//get size of constant buffer as a multiple of 16
@@ -360,11 +353,6 @@ void Game::LoadShaders()
 		FixPath(L"BlurPixelShader.cso").c_str());
 }
 
-
-
-// --------------------------------------------------------
-// Creates the geometry we're going to draw - a single triangle for now
-// --------------------------------------------------------
 void Game::CreateGeometry()
 {
 	// Create some temporary variables to represent colors
