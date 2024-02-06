@@ -32,9 +32,12 @@ public:
 
 private:
 
-	// Initialization helper methods - feel free to customize, combine, remove, etc.
+	// Initialization helper methods
 	void LoadShaders();
+	void LoadMaterials();
 	void CreateGeometry();
+	void CreateLights();
+	void CreateCameras();
 	void InitShadowMapResources();
 	void InitPostProcessResources();
 	void ResizePostProcessResources();
