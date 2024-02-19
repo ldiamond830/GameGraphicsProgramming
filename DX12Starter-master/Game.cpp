@@ -62,7 +62,9 @@ void Game::Init()
 	// geometry to draw and some simple camera matrices.
 	//  - You'll be expanding and/or replacing these later
 	CreateRootSigAndPipelineState();
+	CreateMaterials();
 	CreateGeometry();
+	CreateLights();
 }
 
 // --------------------------------------------------------
@@ -83,29 +85,39 @@ void Game::CreateRootSigAndPipelineState()
 		D3DReadFileToBlob(FixPath(L"PixelShader.cso").c_str(), pixelShaderByteCode.GetAddressOf());
 	}
 
-	// Input layout for vertex
+	// Input layout
 	const unsigned int inputElementCount = 4;
 	D3D12_INPUT_ELEMENT_DESC inputElements[inputElementCount] = {};
 	{
-		inputElements[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-		inputElements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT; // R32 G32 B32 = float3
-		inputElements[0].SemanticName = "POSITION"; // Name must match semantic in shader
-		inputElements[0].SemanticIndex = 0; // This is the first POSITION semantic
+		// Create an input layout that describes the vertex format
+		// used by the vertex shader we're using
+		//  - This is used by the pipeline to know how to interpret the raw data
+		//     sitting inside a vertex buffer
 
-		inputElements[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-		inputElements[1].Format = DXGI_FORMAT_R32G32_FLOAT; // R32 G32 = float2
-		inputElements[1].SemanticName = "TEXCOORD";
-		inputElements[1].SemanticIndex = 0; // This is the first TEXCOORD semantic
+		// Set up the first element - a position, which is 3 float values
+		inputElements[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT; // How far into the vertex is this?  Assume it's after the previous element
+		inputElements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;		// Most formats are described as color channels, really it just means "Three 32-bit floats"
+		inputElements[0].SemanticName = "POSITION";					// This is "POSITION" - needs to match the semantics in our vertex shader input!
+		inputElements[0].SemanticIndex = 0;							// This is the 0th position (there could be more)
+		
+		// Set up the third element - a normal, which is 3 more float values
+		inputElements[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;	// After the previous element
+		inputElements[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;		// 3x 32-bit floats
+		inputElements[1].SemanticName = "NORMAL";					// Match our vertex shader input!
+		inputElements[1].SemanticIndex = 0;							// This is the 0th normal (there could be more)
 
-		inputElements[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-		inputElements[2].Format = DXGI_FORMAT_R32G32B32_FLOAT; // R32 G32 B32 = float3
-		inputElements[2].SemanticName = "NORMAL";
-		inputElements[2].SemanticIndex = 0; // This is the first NORMAL semantic
+		// Set up the second element - a UV, which is 2 more float values
+		inputElements[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;	// After the previous element
+		inputElements[2].Format = DXGI_FORMAT_R32G32_FLOAT;			// 2x 32-bit floats
+		inputElements[2].SemanticName = "TEXCOORD";					// Match our vertex shader input!
+		inputElements[2].SemanticIndex = 0;							// This is the 0th uv (there could be more)
 
-		inputElements[3].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-		inputElements[3].Format = DXGI_FORMAT_R32G32B32_FLOAT; // R32 G32 B32 = float3
-		inputElements[3].SemanticName = "TANGENT";
-		inputElements[3].SemanticIndex = 0; // This is the first TANGENT semantic
+
+		// Set up the fourth element - a tangent, which is 2 more float values
+		inputElements[3].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;	// After the previous element
+		inputElements[3].Format = DXGI_FORMAT_R32G32B32_FLOAT;		// 3x 32-bit floats
+		inputElements[3].SemanticName = "TANGENT";					// Match our vertex shader input!
+		inputElements[3].SemanticIndex = 0;							// This is the 0th tangent (there could be more)
 	}
 
 	// Root Signature
@@ -117,6 +129,7 @@ void Game::CreateRootSigAndPipelineState()
 		cbvRangeVS.BaseShaderRegister = 0;
 		cbvRangeVS.RegisterSpace = 0;
 		cbvRangeVS.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
 		// Describe the range of CBVs needed for the pixel shader
 		D3D12_DESCRIPTOR_RANGE cbvRangePS = {};
 		cbvRangePS.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
@@ -124,31 +137,38 @@ void Game::CreateRootSigAndPipelineState()
 		cbvRangePS.BaseShaderRegister = 0;
 		cbvRangePS.RegisterSpace = 0;
 		cbvRangePS.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
 		// Create a range of SRV's for textures
 		D3D12_DESCRIPTOR_RANGE srvRange = {};
 		srvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange.NumDescriptors = 4; // Set to max number of textures at once (match pixel shader!)
-		srvRange.BaseShaderRegister = 0; // Starts at s0 (match pixel shader!)
+		srvRange.NumDescriptors = 4;		// Set to max number of textures at once (match pixel shader!)
+		srvRange.BaseShaderRegister = 0;	// Starts at s0 (match pixel shader!)
 		srvRange.RegisterSpace = 0;
 		srvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
 		// Create the root parameters
 		D3D12_ROOT_PARAMETER rootParams[3] = {};
+
 		// CBV table param for vertex shader
 		rootParams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 		rootParams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 		rootParams[0].DescriptorTable.NumDescriptorRanges = 1;
 		rootParams[0].DescriptorTable.pDescriptorRanges = &cbvRangeVS;
+
 		// CBV table param for pixel shader
 		rootParams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 		rootParams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 		rootParams[1].DescriptorTable.NumDescriptorRanges = 1;
 		rootParams[1].DescriptorTable.pDescriptorRanges = &cbvRangePS;
+
 		// SRV table param
 		rootParams[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 		rootParams[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 		rootParams[2].DescriptorTable.NumDescriptorRanges = 1;
 		rootParams[2].DescriptorTable.pDescriptorRanges = &srvRange;
+
 		// Create a single static sampler (available to all pixel shaders at the same slot)
+		// Note: This is in lieu of having materials have their own samplers for this demo
 		D3D12_STATIC_SAMPLER_DESC anisoWrap = {};
 		anisoWrap.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 		anisoWrap.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -156,9 +176,11 @@ void Game::CreateRootSigAndPipelineState()
 		anisoWrap.Filter = D3D12_FILTER_ANISOTROPIC;
 		anisoWrap.MaxAnisotropy = 16;
 		anisoWrap.MaxLOD = D3D12_FLOAT32_MAX;
-		anisoWrap.ShaderRegister = 0; // register(s0)
+		anisoWrap.ShaderRegister = 0;  // register(s0)
 		anisoWrap.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
 		D3D12_STATIC_SAMPLER_DESC samplers[] = { anisoWrap };
+
 		// Describe and serialize the root signature
 		D3D12_ROOT_SIGNATURE_DESC rootSig = {};
 		rootSig.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -199,6 +221,9 @@ void Game::CreateRootSigAndPipelineState()
 		psoDesc.InputLayout.NumElements = inputElementCount;
 		psoDesc.InputLayout.pInputElementDescs = inputElements;
 		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		// Overall primitive topology type (triangle, line, etc.) is set here 
+		// IASetPrimTop() is still used to set list/strip/adj options
+		// See: https://docs.microsoft.com/en-us/windows/desktop/direct3d12/managing-graphics-pipeline-state-in-direct3d-12
 
 		// Root sig
 		psoDesc.pRootSignature = rootSignature.Get();
@@ -234,8 +259,7 @@ void Game::CreateRootSigAndPipelineState()
 		psoDesc.SampleMask = 0xffffffff;
 
 		// Create the pipe state object
-		device->CreateGraphicsPipelineState(&psoDesc,
-			IID_PPV_ARGS(pipelineState.GetAddressOf()));
+		device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pipelineState.GetAddressOf()));
 	}
 }
 
@@ -256,13 +280,93 @@ void Game::CreateGeometry()
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(Mesh(FixPath(L"../../Assets/Models/cube.obj").c_str()));
 
 	entityList.push_back(std::make_shared<Entity>(Entity(sphere)));
+	entityList[0]->SetMaterial(materialList[0]);
 	entityList[0]->GetTransform()->SetPosition(2.5f, 0.0f, 0.0f);
 
 	entityList.push_back(std::make_shared<Entity>(Entity(helix)));
+	entityList[1]->SetMaterial(materialList[1]);
 	entityList[1]->GetTransform()->SetPosition(-2.5f, 0.0f, 0.0f);
 
 	entityList.push_back(std::make_shared<Entity>(Entity(cube)));
+	entityList[2]->SetMaterial(materialList[2]);
+}
+
+void Game::CreateMaterials()
+{
+
+	D3D12_CPU_DESCRIPTOR_HANDLE bronzeAlbedo = DX12Helper::GetInstance().LoadTexture(FixPath(L"../../Assets/Textures/PBR/bronze_albedo.png").c_str());
+	D3D12_CPU_DESCRIPTOR_HANDLE bronzeNormal = DX12Helper::GetInstance().LoadTexture(FixPath(L"../../Assets/Textures/PBR/bronze_normals.png").c_str());
+	D3D12_CPU_DESCRIPTOR_HANDLE bronzeMetal = DX12Helper::GetInstance().LoadTexture(FixPath(L"../../Assets/Textures/PBR/bronze_metal.png").c_str());
+	D3D12_CPU_DESCRIPTOR_HANDLE bronzeRough = DX12Helper::GetInstance().LoadTexture(FixPath(L"../../Assets/Textures/PBR/bronze_roughness.png").c_str());
+	materialList.push_back(std::make_shared<Material>(Material(pipelineState, XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f))));
+	materialList[0]->AddTexture(bronzeAlbedo, 0);
+	materialList[0]->AddTexture(bronzeNormal, 1);
+	materialList[0]->AddTexture(bronzeRough, 2);
+	materialList[0]->AddTexture(bronzeMetal, 3);
+	materialList[0]->FinalizeMaterial();
+
+
+	D3D12_CPU_DESCRIPTOR_HANDLE cobblestoneAlbedo = DX12Helper::GetInstance().LoadTexture(FixPath(L"../../Assets/Textures/PBR/cobblestone_albedo.png").c_str());
+	D3D12_CPU_DESCRIPTOR_HANDLE cobblestoneNormal = DX12Helper::GetInstance().LoadTexture(FixPath(L"../../Assets/Textures/PBR/cobblestone_normals.png").c_str());
+	D3D12_CPU_DESCRIPTOR_HANDLE cobblestoneMetal = DX12Helper::GetInstance().LoadTexture(FixPath(L"../../Assets/Textures/PBR/cobblestone_metal.png").c_str());
+	D3D12_CPU_DESCRIPTOR_HANDLE cobblestoneRough = DX12Helper::GetInstance().LoadTexture(FixPath(L"../../Assets/Textures/PBR/cobblestone_roughness.png").c_str());
+	materialList.push_back(std::make_shared<Material>(Material(pipelineState, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(5.0f, 5.0f), XMFLOAT2(1.0f, 1.0f))));
+	materialList[1]->AddTexture(cobblestoneAlbedo, 0);
+	materialList[1]->AddTexture(cobblestoneNormal, 1);
+	materialList[1]->AddTexture(cobblestoneRough, 2);
+	materialList[1]->AddTexture(cobblestoneMetal, 3);
+	materialList[1]->FinalizeMaterial();
+
+	D3D12_CPU_DESCRIPTOR_HANDLE floorAlbedo = DX12Helper::GetInstance().LoadTexture(FixPath(L"../../Assets/Textures/PBR/floor_albedo.png").c_str());
+	D3D12_CPU_DESCRIPTOR_HANDLE floorNormal = DX12Helper::GetInstance().LoadTexture(FixPath(L"../../Assets/Textures/PBR/floor_normals.png").c_str());
+	D3D12_CPU_DESCRIPTOR_HANDLE floorMetal = DX12Helper::GetInstance().LoadTexture(FixPath(L"../../Assets/Textures/PBR/floor_metal.png").c_str());
+	D3D12_CPU_DESCRIPTOR_HANDLE floorRough = DX12Helper::GetInstance().LoadTexture(FixPath(L"../../Assets/Textures/PBR/floor_roughness.png").c_str());
+	materialList.push_back(std::make_shared<Material>(Material(pipelineState, XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f))));
+	materialList[2]->AddTexture(floorAlbedo, 0);
+	materialList[2]->AddTexture(floorNormal, 1);
+	materialList[2]->AddTexture(floorRough, 2);
+	materialList[2]->AddTexture(floorMetal, 3);
+	materialList[2]->FinalizeMaterial();
+}
+
+void Game::CreateLights()
+{
 	
+	directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight1.direction = XMFLOAT3(1.0f, -0.25f, 0.0f);
+	directionalLight1.color = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	directionalLight1.intensity = 1.0f;
+	lights.push_back(directionalLight1);
+
+	
+	directionalLight2.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight2.direction = XMFLOAT3(-1.0f, 0.0f, 0.0f);
+	directionalLight2.color = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	directionalLight2.intensity = 1.0f;
+	lights.push_back(directionalLight2);
+
+	
+	directionalLight3.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight3.direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	directionalLight3.color = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	directionalLight3.intensity = 1.0f;
+	lights.push_back(directionalLight3);
+
+	
+	pointLight1.type = LIGHT_TYPE_POINT;
+	pointLight1.position = XMFLOAT3(-6.0f, 0.0f, 0.0f);
+	pointLight1.color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	pointLight1.intensity = 1.0f;
+	pointLight1.range = 5.0f;
+	lights.push_back(pointLight1);
+
+	
+	pointLight2.type = LIGHT_TYPE_POINT;
+	pointLight2.position = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	pointLight2.color = XMFLOAT3(1.0f, 1.0f, 0.0f);
+	pointLight2.intensity = 1.0f;
+	pointLight2.range = 10.0f;
+	lights.push_back(pointLight2);
 }
 
 
@@ -290,7 +394,7 @@ void Game::Update(float deltaTime, float totalTime)
 	mainCamera->Update(deltaTime);
 	
 	for (std::shared_ptr<Entity> e : entityList) {
-		e->GetTransform()->Rotate(0, 5 * deltaTime, 0);
+		//e->GetTransform()->Rotate(0, 5 * deltaTime, 0);
 	}
 }
 
@@ -357,9 +461,28 @@ void Game::Draw(float deltaTime, float totalTime)
 			vsData.projection = mainCamera->GetProjection();
 			vsData.view = mainCamera->GetView();
 			vsData.world = e->GetTransform()->GetWorldMatrix();
+			vsData.worldInverseTranspose = e->GetTransform()->GetWorldInverseTransposeMatrix();
 
 			auto handle = DX12Helper::GetInstance().FillNextConstantBufferAndGetGPUDescriptorHandle(&vsData, sizeof(vsData));
 			commandList->SetGraphicsRootDescriptorTable(0, handle);
+
+			PixelShaderExternalData psData = {};
+			psData.uvScale = e->GetMaterial()->GetUVScale();
+			psData.uvOffset = e->GetMaterial()->GetUVOffset();
+			psData.cameraPosition = mainCamera->GetTransform()->GetPosition();
+			psData.lightCount = lightCount;
+
+			memcpy(psData.lights, &lights[0], sizeof(Light) * MAX_LIGHT_COUNT);
+			// Send this to a chunk of the constant buffer heap
+			// and grab the GPU handle for it so we can set it for this draw
+			D3D12_GPU_DESCRIPTOR_HANDLE cbHandlePS =
+				DX12Helper::GetInstance().FillNextConstantBufferAndGetGPUDescriptorHandle(
+					(void*)(&psData), sizeof(PixelShaderExternalData));
+			// Set this constant buffer handle
+			// Note: This assumes that descriptor table 1 is the
+			// place to put this particular descriptor. This
+			// is based on how we set up our root signature.
+			commandList->SetGraphicsRootDescriptorTable(1, cbHandlePS);
 
 			e->Draw(commandList);
 		}

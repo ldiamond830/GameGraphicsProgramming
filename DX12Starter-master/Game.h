@@ -7,7 +7,7 @@
 #include <wrl/client.h> // Used for ComPtr - a smart pointer for COM objects
 #include <memory>
 #include <vector>
-
+#include "Light.h"
 class Game 
 	: public DXCore
 {
@@ -28,7 +28,8 @@ private:
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void CreateRootSigAndPipelineState();
 	void CreateGeometry();
-
+	void CreateMaterials();
+	void CreateLights();
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
 	//     Component Object Model, which DirectX objects do
@@ -45,6 +46,14 @@ private:
 
 	std::shared_ptr<Camera> mainCamera;
 	std::vector<std::shared_ptr<Entity>> entityList;
+	std::vector<std::shared_ptr<Material>> materialList;
+	std::vector<Light> lights;
+	int lightCount = 5;
 
+	Light directionalLight1 = {};
+	Light directionalLight2 = {};
+	Light directionalLight3 = {};
+	Light pointLight1 = {};
+	Light pointLight2 = {};
 };
 
