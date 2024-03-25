@@ -8,7 +8,7 @@
 // Needed for a helper function to load pre-compiled shader files
 #pragma comment(lib, "d3dcompiler.lib")
 #include <d3dcompiler.h>
-
+#include <stdlib.h>
 // For the DirectX Math library
 using namespace DirectX;
 
@@ -68,14 +68,15 @@ void Game::Init()
 		FixPath(L"Raytracing.cso"));
 
 	mainCamera = std::make_shared<Camera>(Camera(((float)this->windowWidth / this->windowHeight), XMFLOAT3(0.0f, 0.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), 45, 0.1f, 500.0f, 0.01f, 5.0f));
-
+	srand(time(NULL));
 	// Helper methods for loading shaders, creating some basic
 	// geometry to draw and some simple camera matrices.
 	//  - You'll be expanding and/or replacing these later
 	CreateRootSigAndPipelineState();
-	CreateMaterials();
+	//CreateMaterials();
 	CreateGeometry();
 	CreateLights();
+	commandList->Close();
 }
 
 // --------------------------------------------------------
@@ -289,7 +290,7 @@ void Game::CreateGeometry()
 	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>(Mesh(FixPath(L"../../Assets/Models/sphere.obj").c_str()));
 	std::shared_ptr<Mesh> helix = std::make_shared<Mesh>(Mesh(FixPath(L"../../Assets/Models/helix.obj").c_str()));
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(Mesh(FixPath(L"../../Assets/Models/cube.obj").c_str()));
-
+	/*
 	entityList.push_back(std::make_shared<Entity>(Entity(sphere)));
 	entityList[0]->SetMaterial(materialList[0]);
 	entityList[0]->GetTransform()->SetPosition(2.5f, 0.0f, 0.0f);
@@ -300,6 +301,24 @@ void Game::CreateGeometry()
 
 	entityList.push_back(std::make_shared<Entity>(Entity(cube)));
 	entityList[2]->SetMaterial(materialList[2]);
+	*/
+	
+
+	for (int i = 0; i < 20; i++) {
+		float random = rand() % 4 + 1;
+		if (random <= 2) {
+			entityList.push_back(std::make_shared<Entity>(Entity(sphere)));
+		}
+		else if (random <= 3) {
+			entityList.push_back(std::make_shared<Entity>(Entity(helix)));
+		}
+		else {
+			entityList.push_back(std::make_shared<Entity>(Entity(cube)));
+		}
+
+		entityList[i]->SetMaterial(std::make_shared<Material>(Material(pipelineState, XMFLOAT3(rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX)), XMFLOAT2(1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f))));
+		entityList[i]->GetTransform()->SetPosition(rand() % 10, rand() % 10, rand() % 10);
+	}
 
 
 	// Meshes create their own BLAS's; we just need to create the TLAS for the scene here
@@ -410,7 +429,7 @@ void Game::Update(float deltaTime, float totalTime)
 	mainCamera->Update(deltaTime);
 	
 	for (std::shared_ptr<Entity> e : entityList) {
-		//e->GetTransform()->Rotate(0, 5 * deltaTime, 0);
+		e->GetTransform()->Rotate(0, 5 * deltaTime, 0);
 	}
 }
 
@@ -419,18 +438,22 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
+	
+	DX12Helper::GetInstance().WaitForGPU();
+	commandAllocator->Reset();
+	commandList->Reset(commandAllocator.Get(), 0);
+	/*
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap =
 		DX12Helper::GetInstance().GetCBVSRVDescriptorHeap();
 	commandList->SetDescriptorHeaps(1, descriptorHeap.GetAddressOf());
-
-	//commandAllocator->Reset();
-	//commandList->Reset(commandAllocator.Get(), 0);
+	*/
+	
 	// Grab the current back buffer for this frame
 	Microsoft::WRL::ComPtr<ID3D12Resource> currentBackBuffer = backBuffers[currentSwapBuffer];
 
 	RaytracingHelper::GetInstance().CreateTopLevelAccelerationStructureForScene(entityList);
 	 // Perform raytrace, including execution of command list
-		RaytracingHelper::GetInstance().Raytrace(mainCamera, currentBackBuffer);
+	RaytracingHelper::GetInstance().Raytrace(mainCamera, currentBackBuffer);
 	/*
 	// Clearing the render target
 	{
@@ -511,10 +534,11 @@ void Game::Draw(float deltaTime, float totalTime)
 		
 	}
 	*/
-
+	
 	// Present
 	{
 		// Transition back to present
+			/*
 		D3D12_RESOURCE_BARRIER rb = {};
 		rb.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		rb.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -526,7 +550,7 @@ void Game::Draw(float deltaTime, float totalTime)
 
 		// Must occur BEFORE present
 		DX12Helper::GetInstance().CloseExecuteAndResetCommandList();
-
+		*/
 		// Present the current back buffer
 		bool vsyncNecessary = vsync || !deviceSupportsTearing || isFullscreen;
 		swapChain->Present(
@@ -538,5 +562,5 @@ void Game::Draw(float deltaTime, float totalTime)
 		if (currentSwapBuffer >= numBackBuffers)
 			currentSwapBuffer = 0;
 	}
-
+	DX12Helper::GetInstance().WaitForGPU();
 }
