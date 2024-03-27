@@ -66,6 +66,8 @@ public:
 
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> GetDefaultAllocator();
 
+	UINT GetDescriptorIndex(D3D12_GPU_DESCRIPTOR_HANDLE handle);
+
 private:
 	static DX12Helper* instance;
 	DX12Helper() {};

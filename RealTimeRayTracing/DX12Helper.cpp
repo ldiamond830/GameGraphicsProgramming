@@ -77,6 +77,11 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DX12Helper::GetCBVSRVDescriptorHeap
 	return cbvSrvDescriptorHeap;
 }
 
+UINT DX12Helper::GetDescriptorIndex(D3D12_GPU_DESCRIPTOR_HANDLE handle)
+{
+	return (UINT)(handle.ptr - cbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr) / (UINT)cbvSrvDescriptorHeapIncrementSize;
+}
+
 // --------------------------------------------------------
 // Copies the given data into the next "unused" spot in the CBV upload heap (wrapping at the end, since
 // we treat it like a ring buffer). Then creates a CBV in the next "unused" spot in the CBV heap that

@@ -73,7 +73,7 @@ void Game::Init()
 	// geometry to draw and some simple camera matrices.
 	//  - You'll be expanding and/or replacing these later
 	CreateRootSigAndPipelineState();
-	//CreateMaterials();
+	CreateMaterials();
 	CreateGeometry();
 	CreateLights();
 	commandList->Close();
@@ -308,15 +308,19 @@ void Game::CreateGeometry()
 		float random = rand() % 4 + 1;
 		if (random <= 2) {
 			entityList.push_back(std::make_shared<Entity>(Entity(sphere)));
+			entityList[i]->SetMaterial(materialList[0]);
 		}
 		else if (random <= 3) {
 			entityList.push_back(std::make_shared<Entity>(Entity(helix)));
+			entityList[i]->SetMaterial(materialList[1]);
 		}
 		else {
 			entityList.push_back(std::make_shared<Entity>(Entity(cube)));
+			entityList[i]->SetMaterial(materialList[2]);
 		}
 
-		entityList[i]->SetMaterial(std::make_shared<Material>(Material(pipelineState, XMFLOAT3(rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX)), XMFLOAT2(1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f))));
+		//entityList[i]->SetMaterial(std::make_shared<Material>(Material(pipelineState, XMFLOAT3(rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX)), XMFLOAT2(1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f))));
+		
 		entityList[i]->GetTransform()->SetPosition(rand() % 10, rand() % 10, rand() % 10);
 	}
 

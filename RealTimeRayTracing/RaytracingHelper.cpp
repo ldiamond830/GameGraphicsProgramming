@@ -106,9 +106,16 @@ void RaytracingHelper::CreateRaytracingRootSignatures()
 		cbufferRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 		cbufferRange.RegisterSpace = 0;
 
+		D3D12_DESCRIPTOR_RANGE allTexturesRange = {};
+		allTexturesRange.BaseShaderRegister = 0;
+		allTexturesRange.NumDescriptors = UINT_MAX;
+		allTexturesRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		allTexturesRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		allTexturesRange.RegisterSpace = 1; // Must match shader setup!
+
 		// Set up the root parameters for the global signature (of which there are four)
 		// These need to match the shader(s) we'll be using
-		D3D12_ROOT_PARAMETER rootParams[3] = {};
+		D3D12_ROOT_PARAMETER rootParams[4] = {};
 		{
 			// First param is the UAV range for the output texture
 			rootParams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
@@ -122,6 +129,12 @@ void RaytracingHelper::CreateRaytracingRootSignatures()
 			rootParams[1].Descriptor.ShaderRegister = 0;
 			rootParams[1].Descriptor.RegisterSpace = 0;
 
+			// Fourth is bindless table
+			rootParams[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			rootParams[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+			rootParams[3].DescriptorTable.NumDescriptorRanges = 1;
+			rootParams[3].DescriptorTable.pDescriptorRanges = &allTexturesRange;
+
 			// Third is constant buffer for the overall scene (camera matrices, lights, etc.)
 			rootParams[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 			rootParams[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
@@ -129,14 +142,27 @@ void RaytracingHelper::CreateRaytracingRootSignatures()
 			rootParams[2].DescriptorTable.pDescriptorRanges = &cbufferRange;
 		}
 
+		// Create a single static sampler (available to all shaders at the same slot)
+		// Note: This is in lieu of having materials have their own samplers for this demo
+		D3D12_STATIC_SAMPLER_DESC anisoWrap = {};
+		anisoWrap.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		anisoWrap.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		anisoWrap.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		anisoWrap.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+		anisoWrap.MaxLOD = D3D12_FLOAT32_MAX;
+		anisoWrap.ShaderRegister = 0;
+		anisoWrap.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+		D3D12_STATIC_SAMPLER_DESC samplers[] = { anisoWrap };
+
 		// Create the global root signature
 		Microsoft::WRL::ComPtr<ID3DBlob> blob;
 		Microsoft::WRL::ComPtr<ID3DBlob> errors;
 		D3D12_ROOT_SIGNATURE_DESC globalRootSigDesc = {};
 		globalRootSigDesc.NumParameters = ARRAYSIZE(rootParams);
 		globalRootSigDesc.pParameters = rootParams;
-		globalRootSigDesc.NumStaticSamplers = 0;
-		globalRootSigDesc.pStaticSamplers = 0;
+		globalRootSigDesc.NumStaticSamplers = 1;
+		globalRootSigDesc.pStaticSamplers = samplers;
 		globalRootSigDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
 
 		D3D12SerializeRootSignature(&globalRootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, blob.GetAddressOf(), errors.GetAddressOf());
@@ -693,7 +719,10 @@ void RaytracingHelper::CreateTopLevelAccelerationStructureForScene(std::vector<s
 		XMFLOAT3 c = scene[i]->GetMaterial()->GetColorTint();
 		//
 		entityData[meshBlasIndex].color[id.InstanceID] = XMFLOAT4(c.x, c.y, c.z, (float)((i + 1) % 2)); // Using alpha channel as "roughness"
-	
+		D3D12_GPU_DESCRIPTOR_HANDLE textureHandleStart = scene[i]->GetMaterial()->GetGPUHandleForSRVs();
+		entityData[meshBlasIndex].albedoIndex = DX12Helper::GetInstance().GetDescriptorIndex(textureHandleStart);
+		entityData[meshBlasIndex].normalIndex = entityData[meshBlasIndex].albedoIndex + 1;
+		entityData[meshBlasIndex].roughnessIndex = entityData[meshBlasIndex].albedoIndex + 3; // skips over metalness map for the time being
 		// On to the next instance for this mesh
 		instanceIDs[meshBlasIndex]++;
 	}
@@ -852,7 +881,7 @@ void RaytracingHelper::Raytrace(std::shared_ptr<Camera> camera, Microsoft::WRL::
 		dxrCommandList->SetComputeRootDescriptorTable(0, raytracingOutputUAV_GPU);	// First table is just output UAV
 		dxrCommandList->SetComputeRootShaderResourceView(1, topLevelAccelerationStructure->GetGPUVirtualAddress());		// Second is SRV for accel structure (as root SRV, no table needed)
 		dxrCommandList->SetComputeRootDescriptorTable(2, cbuffer);					// Third is CBV
-
+		dxrCommandList->SetComputeRootDescriptorTable(3, heap[0]->GetGPUDescriptorHandleForHeapStart());
 		// Dispatch rays
 		D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
 		

@@ -45,6 +45,9 @@ cbuffer SceneData : register(b0)
 cbuffer ObjectData : register(b1)
 {
 	float4 entityColor[MAX_INSTANCES_PER_BLAS];
+    int albedoIndex;
+    int normalIndex;
+    int roughnessIndex;
 };
 
 
@@ -60,7 +63,8 @@ RaytracingAccelerationStructure SceneTLAS	: register(t0);
 ByteAddressBuffer IndexBuffer        		: register(t1);
 ByteAddressBuffer VertexBuffer				: register(t2);
 
-
+Texture2D AllTextures[] : register(t0, space1);
+SamplerState BasicSampler : register(s0);
 // === Helpers ===
 
 // Loads the indices of the specified triangle from the index buffer
@@ -254,6 +258,19 @@ void Miss(inout RayPayload payload)
 	payload.color *= color;
 }
 
+float3 NormalMapping(float3 normalFromMap, float3 normal, float3 tangent)
+{
+	// Gather the required vectors for converting the normal
+    float3 N = normal;
+    float3 T = normalize(tangent - N * dot(tangent, N));
+    float3 B = cross(T, N);
+
+	// Create the 3x3 matrix to convert from TANGENT-SPACE normals to WORLD-SPACE normals
+    float3x3 TBN = float3x3(T, B, N);
+
+	// Adjust the normal from the map and simply use the results
+    return normalize(mul(normalFromMap, TBN));
+}
 
 // Closest hit shader - Runs when a ray hits the closest surface
 [shader("closesthit")]
@@ -267,12 +284,27 @@ void ClosestHit(inout RayPayload payload, BuiltInTriangleIntersectionAttributes 
     }
 
 	// We've hit, so adjust the payload color by this instance's color
-    payload.color *= entityColor[InstanceID()].rgb;
-
+    //payload.color *= entityColor[InstanceID()].rgb;
+    
 	// Get the geometry hit details and convert normal to world space
     Vertex hit = GetHitDetails(PrimitiveIndex(), hitAttributes);
+    //normalmapping
     float3 normal_WS = normalize(mul(hit.normal, (float3x3) ObjectToWorld4x3()));
+    float3 tangent_WS = normalize(mul(hit.tangent, (float3x3) ObjectToWorld4x3()));
+    float3 mappedNormal = AllTextures[normalIndex].SampleLevel(BasicSampler, hit.uv, 0).rgb * 2 - 1;
+    mappedNormal = normalize(mappedNormal);
 
+    float3 N = normalize(normal_WS); // Must be normalized here or before
+    float3 T = normalize(tangent_WS); // Must be normalized here or before
+    T = normalize(T - N * dot(T, N)); // Gram-Schmidt assumes T&N are normalized!
+    float3 B = cross(T, N);
+    float3x3 TBN = float3x3(T, B, N);
+
+    normal_WS = mul(mappedNormal, TBN);
+    
+    //surface color
+    payload.color *= pow(AllTextures[albedoIndex].SampleLevel(BasicSampler, hit.uv, 0), 2.2f);
+	
 	// Calc a unique RNG value for this ray, based on the "uv" of this pixel and other per-ray data
     float2 uv = (float2) DispatchRaysIndex() / (float2) DispatchRaysDimensions();
     float2 rng = rand2(uv * (payload.recursionDepth + 1) + payload.rayPerPixelIndex + RayTCurrent());
@@ -280,7 +312,8 @@ void ClosestHit(inout RayPayload payload, BuiltInTriangleIntersectionAttributes 
 	// Interpolate between perfect reflection and random bounce based on roughness
     float3 refl = reflect(WorldRayDirection(), normal_WS);
     float3 randomBounce = RandomCosineWeightedHemisphere(rand(rng), rand(rng.yx), normal_WS);
-    float3 dir = normalize(lerp(refl, randomBounce, entityColor[InstanceID()].a));
+    //gets roughness from map
+    float3 dir = normalize(lerp(refl, randomBounce, AllTextures[roughnessIndex].SampleLevel(BasicSampler, hit.uv, 0).rgb));
 
 	// Create the new recursive ray
     RayDesc ray;
