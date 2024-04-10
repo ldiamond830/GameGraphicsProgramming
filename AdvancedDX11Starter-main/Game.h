@@ -7,6 +7,7 @@
 #include "SimpleShader.h"
 #include "Lights.h"
 #include "Sky.h"
+#include "Emitter.h"
 
 #include <DirectXMath.h>
 #include <wrl/client.h>
@@ -43,6 +44,10 @@ private:
 	std::shared_ptr<Mesh> lightMesh;
 	std::shared_ptr<SimpleVertexShader> lightVS;
 	std::shared_ptr<SimplePixelShader> lightPS;
+
+	std::vector<std::shared_ptr<Emitter>> emitterList;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> particleDepthState;
+	Microsoft::WRL::ComPtr<ID3D11BlendState> particleBlendState;
 
 	// Texture related resources
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerOptions;

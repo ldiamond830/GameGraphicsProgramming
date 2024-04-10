@@ -140,6 +140,9 @@ void Game::LoadAssetsAndCreateEntities()
 	std::shared_ptr<SimpleVertexShader> skyVS = LoadShader(SimpleVertexShader, L"SkyVS.cso");
 	std::shared_ptr<SimplePixelShader> skyPS  = LoadShader(SimplePixelShader, L"SkyPS.cso");
 
+	std::shared_ptr<SimpleVertexShader> particleVS = LoadShader(SimpleVertexShader, L"ParticleVertexShader.cso");
+	std::shared_ptr<SimplePixelShader> particlePS = LoadShader(SimplePixelShader, L"ParticlePixelShader.cso");
+
 	// Make the meshes
 	std::shared_ptr<Mesh> sphereMesh = std::make_shared<Mesh>(FixPath(L"../../Assets/Models/sphere.obj").c_str(), device);
 	std::shared_ptr<Mesh> helixMesh = std::make_shared<Mesh>(FixPath(L"../../Assets/Models/helix.obj").c_str(), device);
@@ -154,6 +157,7 @@ void Game::LoadAssetsAndCreateEntities()
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> bronzeA,  bronzeN,  bronzeR,  bronzeM;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> roughA,  roughN,  roughR,  roughM;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodA,  woodN,  woodR,  woodM;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> magicParticle;
 
 	// Load the textures using our succinct LoadTexture() macro
 	LoadTexture(L"../../Assets/Textures/cobblestone_albedo.png", cobbleA);
@@ -190,6 +194,8 @@ void Game::LoadAssetsAndCreateEntities()
 	LoadTexture(L"../../Assets/Textures/wood_normals.png", woodN);
 	LoadTexture(L"../../Assets/Textures/wood_roughness.png", woodR);
 	LoadTexture(L"../../Assets/Textures/wood_metal.png", woodM);
+
+	LoadTexture(L"../../Assets/Particles/PNG (Transparent)/magic_02.png", magicParticle);
 
 	// Describe and create our sampler state
 	D3D11_SAMPLER_DESC sampDesc = {};
@@ -324,7 +330,30 @@ void Game::LoadAssetsAndCreateEntities()
 	woodMatPBR->AddTextureSRV("RoughnessMap", woodR);
 	woodMatPBR->AddTextureSRV("MetalMap", woodM);
 
+	std::shared_ptr<Material> magicParticleMaterial = std::make_shared<Material>(particlePS, particleVS, XMFLOAT3(0, 0, 1), XMFLOAT2(2, 2));
+	magicParticleMaterial->AddSampler("BasicSampler", samplerOptions);
+	magicParticleMaterial->AddTextureSRV("Particle", magicParticle);
 
+	// A depth state for the particles
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // Turns off depth writing
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	device->CreateDepthStencilState(&dsDesc, particleDepthState.GetAddressOf());
+
+	// Blend for particles (additive)
+	D3D11_BLEND_DESC blend = {};
+	blend.AlphaToCoverageEnable = false;
+	blend.IndependentBlendEnable = false;
+	blend.RenderTarget[0].BlendEnable = true;
+	blend.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blend.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA; // Still respect pixel shader output alpha
+	blend.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blend.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blend.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blend.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	blend.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	device->CreateBlendState(&blend, particleBlendState.GetAddressOf());
 
 	// === Create the PBR entities =====================================
 	std::shared_ptr<GameEntity> cobSpherePBR = std::make_shared<GameEntity>(sphereMesh, cobbleMat2xPBR);
@@ -400,7 +429,9 @@ void Game::LoadAssetsAndCreateEntities()
 	entities.push_back(roughSphere);
 	entities.push_back(woodSphere);
 
-
+	std::shared_ptr<Emitter> magicEmitter = std::make_shared<Emitter>(device, magicParticleMaterial, 100, 30);
+	emitterList.push_back(magicEmitter);
+	emitterList[0]->GetTransform()->SetPosition(1, 0, 0);
 	// Save assets needed for drawing point lights
 	lightMesh = sphereMesh;
 	lightVS = vertexShader;
@@ -486,7 +517,9 @@ void Game::Update(float deltaTime, float totalTime)
 
 	// Update the camera
 	camera->Update(deltaTime);
-
+	for (std::shared_ptr<Emitter> emitter : emitterList) {
+		emitter->Update(deltaTime, totalTime);
+	}
 	// Check individual input
 	Input& input = Input::GetInstance();
 	if (input.KeyDown(VK_ESCAPE)) Quit();
@@ -498,6 +531,8 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
+
+
 	// Frame START
 	// - These things should happen ONCE PER FRAME
 	// - At the beginning of Game::Draw() before drawing *anything*
@@ -532,9 +567,23 @@ void Game::Draw(float deltaTime, float totalTime)
 	// Draw the light sources?
 	if(showPointLights)
 		DrawPointLights();
-
+	
 	// Draw the sky
-	sky->Draw(camera);
+	//sky->Draw(camera);
+
+	// Particle states
+	context->OMSetBlendState(particleBlendState.Get(), 0, 0xffffffff);	// Additive blending
+	context->OMSetDepthStencilState(particleDepthState.Get(), 0);
+
+	for (std::shared_ptr<Emitter> emitter : emitterList) {
+		emitter->Draw(context, camera, totalTime);
+	}
+
+
+	// Reset to default states for next frame
+	context->OMSetBlendState(0, 0, 0xffffffff);
+	context->OMSetDepthStencilState(0, 0);
+	context->RSSetState(0);
 
 	// Frame END
 	// - These should happen exactly ONCE PER FRAME
