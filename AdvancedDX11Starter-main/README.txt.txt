@@ -1,0 +1,1 @@
+my five extra features where, color lerping, position lerping, adding and independent transform to the emitter, alpha cutout, and 

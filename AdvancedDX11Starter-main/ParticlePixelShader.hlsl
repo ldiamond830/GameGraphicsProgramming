@@ -16,6 +16,12 @@ SamplerState BasicSampler : register(s0);
 // Entry point for this pixel shader
 float4 main(VertexToPixel input) : SV_TARGET
 {
+    float4 color = Particle.Sample(BasicSampler, input.uv) * input.colorTint;
+
+    if (color.a < 0.1) {
+        discard;
+    }
+
 	// Return the texture sample
-    return Particle.Sample(BasicSampler, input.uv) * input.colorTint;
+    return color;
 }

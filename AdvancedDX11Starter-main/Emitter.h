@@ -15,6 +15,8 @@ private:
 	struct Particle {
 		float emitTime;
 		DirectX::XMFLOAT3 startPos;
+		DirectX::XMFLOAT3 endPos;
+		float pad;
 		DirectX::XMFLOAT4 startColor;
 		DirectX::XMFLOAT4 endColor;
 	};
@@ -31,6 +33,8 @@ private:
 	float secondsBetweenEmission = 0.5f; //always less than 1
 	float timeSinceLastEmit = 0.0f;
 	float particleLifetime = 2.0f;
+	DirectX::XMFLOAT3 endPos;
+	float radius;
 
 	// Rendering
 	Microsoft::WRL::ComPtr<ID3D11Device> device;
@@ -48,7 +52,8 @@ private:
 	void CreateParticlesAndGPUResources();
 
 public:
-	Emitter(Microsoft::WRL::ComPtr<ID3D11Device> device, std::shared_ptr<Material> material, int maxParticles, int particlesPerSecond);
+	Emitter(Microsoft::WRL::ComPtr<ID3D11Device> device, std::shared_ptr<Material> material, int maxParticles, int particlesPerSecond, 
+		DirectX::XMFLOAT3 endPos = DirectX::XMFLOAT3(INT16_MAX, INT16_MAX, INT16_MAX), float radius = 1.0f);
 	void Update(float deltaTime, float currentTime);
 	void Draw(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context, std::shared_ptr<Camera> camera, float currentTime);
 	Transform* GetTransform();

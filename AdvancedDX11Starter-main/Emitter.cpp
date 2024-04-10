@@ -1,13 +1,18 @@
 #include "Emitter.h"
 
-Emitter::Emitter(Microsoft::WRL::ComPtr<ID3D11Device> _device, std::shared_ptr<Material> _material, int _maxParticles, int _particlesPerSecond)
+Emitter::Emitter(Microsoft::WRL::ComPtr<ID3D11Device> _device, std::shared_ptr<Material> _material, int _maxParticles, int _particlesPerSecond, 
+	DirectX::XMFLOAT3 _endPos, float _radius)
 {
 	device = _device;
 	material = _material;
 	maxParticles = _maxParticles;
 	particlesPerSecond = _particlesPerSecond;
+	endPos = _endPos;
+	radius = _radius;
+
 	particles = new Particle[maxParticles];
 	transform = new Transform();
+
 	CreateParticlesAndGPUResources();
 }
 
@@ -127,9 +132,17 @@ void Emitter::EmitParticle(float currentTime)
 
 	// Adjust the particle start position based on the random range (box shape)
 	particles[firstDead].startPos = transform->GetPosition();
-	particles[firstDead].startPos.x += ((float)rand() / RAND_MAX * (1.0f - -1.0f) + -1.0f);
-	particles[firstDead].startPos.y += ((float)rand() / RAND_MAX * (1.0f - -1.0f) + -1.0f);
-	particles[firstDead].startPos.z += ((float)rand() / RAND_MAX * (1.0f - -1.0f) + -1.0f);
+	particles[firstDead].startPos.x += RandomRange(-radius, radius);
+	particles[firstDead].startPos.y += RandomRange(-radius, radius);
+	particles[firstDead].startPos.z += RandomRange(-radius, radius);
+
+	//don't move the particle
+	if (endPos.x == INT16_MAX) {
+		particles[firstDead].endPos = particles[firstDead].startPos;
+	}
+	else {
+		particles[firstDead].endPos = endPos;
+	}
 
 	particles[firstDead].startColor = DirectX::XMFLOAT4(material->GetColorTint().x, material->GetColorTint().y, material->GetColorTint().z, 1.0f);
 	particles[firstDead].endColor = particles[firstDead].startColor;

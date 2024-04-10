@@ -429,7 +429,7 @@ void Game::LoadAssetsAndCreateEntities()
 	entities.push_back(roughSphere);
 	entities.push_back(woodSphere);
 
-	std::shared_ptr<Emitter> magicEmitter = std::make_shared<Emitter>(device, magicParticleMaterial, 100, 30);
+	std::shared_ptr<Emitter> magicEmitter = std::make_shared<Emitter>(device, magicParticleMaterial, 100, 30, XMFLOAT3(1,0,0));
 	emitterList.push_back(magicEmitter);
 	emitterList[0]->GetTransform()->SetPosition(1, 0, 0);
 	// Save assets needed for drawing point lights
@@ -569,11 +569,11 @@ void Game::Draw(float deltaTime, float totalTime)
 		DrawPointLights();
 	
 	// Draw the sky
-	//sky->Draw(camera);
+	sky->Draw(camera);
 
 	// Particle states
-	context->OMSetBlendState(particleBlendState.Get(), 0, 0xffffffff);	// Additive blending
-	context->OMSetDepthStencilState(particleDepthState.Get(), 0);
+	//context->OMSetBlendState(particleBlendState.Get(), 0, 0xffffffff);	// Additive blending
+	//context->OMSetDepthStencilState(particleDepthState.Get(), 0);
 
 	for (std::shared_ptr<Emitter> emitter : emitterList) {
 		emitter->Draw(context, camera, totalTime);

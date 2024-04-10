@@ -10,6 +10,8 @@ struct Particle
 {
     float emitTime;
     float3 startPos;
+    float3 endPos;
+    float pad;
     float4 startColor;
     float4 endColor;
 };
@@ -47,7 +49,7 @@ VertexToPixel main(uint id : SV_VertexID)
     offsets[2] = float2(+1.0f, -1.0f); // BR
     offsets[3] = float2(-1.0f, -1.0f); // BL    
     
-    float3 pos = p.startPos;
+    float3 pos = lerp(p.startPos, p.endPos, age);
     pos += float3(view._11, view._12, view._13) * offsets[cornerID].x;
     pos += float3(view._21, view._22, view._23) * offsets[cornerID].y;
     
