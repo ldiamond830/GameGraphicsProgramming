@@ -6,7 +6,7 @@
 #include "Vertex.h"
 #include "Input.h"
 #include "Helpers.h"
-
+#include <iostream>
 #include "WICTextureLoader.h"
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_dx11.h"
@@ -141,6 +141,7 @@ void Game::LoadAssetsAndCreateEntities()
 	std::shared_ptr<SimplePixelShader> skyPS  = LoadShader(SimplePixelShader, L"SkyPS.cso");
 
 	std::shared_ptr<SimpleVertexShader> particleVS = LoadShader(SimpleVertexShader, L"ParticleVertexShader.cso");
+	std::shared_ptr<SimpleVertexShader> animatedParticleVS = LoadShader(SimpleVertexShader, L"AnimatedParticleVertexShader.cso");
 	std::shared_ptr<SimplePixelShader> particlePS = LoadShader(SimplePixelShader, L"ParticlePixelShader.cso");
 
 	// Make the meshes
@@ -157,7 +158,7 @@ void Game::LoadAssetsAndCreateEntities()
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> bronzeA,  bronzeN,  bronzeR,  bronzeM;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> roughA,  roughN,  roughR,  roughM;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodA,  woodN,  woodR,  woodM;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> magicParticle;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> magicParticle, animatedParticle, smokeParticle;
 
 	// Load the textures using our succinct LoadTexture() macro
 	LoadTexture(L"../../Assets/Textures/cobblestone_albedo.png", cobbleA);
@@ -196,7 +197,8 @@ void Game::LoadAssetsAndCreateEntities()
 	LoadTexture(L"../../Assets/Textures/wood_metal.png", woodM);
 
 	LoadTexture(L"../../Assets/Particles/PNG (Transparent)/magic_02.png", magicParticle);
-
+	LoadTexture(L"../../Assets/Particles/PNG (Transparent)/smoke_10.png", smokeParticle);
+	LoadTexture(L"../../Assets/Particles/flame_animated.png", animatedParticle);
 	// Describe and create our sampler state
 	D3D11_SAMPLER_DESC sampDesc = {};
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -334,6 +336,14 @@ void Game::LoadAssetsAndCreateEntities()
 	magicParticleMaterial->AddSampler("BasicSampler", samplerOptions);
 	magicParticleMaterial->AddTextureSRV("Particle", magicParticle);
 
+	std::shared_ptr<Material> smokeParticleMaterial = std::make_shared<Material>(particlePS, particleVS, XMFLOAT3(0, 0, 1), XMFLOAT2(2, 2));
+	smokeParticleMaterial->AddSampler("BasicSampler", samplerOptions);
+	smokeParticleMaterial->AddTextureSRV("Particle", smokeParticle);
+
+	std::shared_ptr<Material> animatedParticleMaterial = std::make_shared<Material>(particlePS, animatedParticleVS, XMFLOAT3(1, 1, 1), XMFLOAT2(2, 2));
+	animatedParticleMaterial->AddSampler("BasicSampler", samplerOptions);
+	animatedParticleMaterial->AddTextureSRV("Particle", animatedParticle);
+
 	// A depth state for the particles
 	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
 	dsDesc.DepthEnable = true;
@@ -421,6 +431,10 @@ void Game::LoadAssetsAndCreateEntities()
 	woodSphere->GetTransform()->SetPosition(6, -2, 0);
 	woodSphere->GetTransform()->SetScale(2, 2, 2);
 
+	std::shared_ptr<GameEntity> woodCube = std::make_shared<GameEntity>(cubeMesh, roughMat);
+	woodCube->GetTransform()->SetPosition(0, 0, 5);
+	woodCube->GetTransform()->SetScale(15, 15, 5);
+
 	entities.push_back(cobSphere);
 	entities.push_back(floorSphere);
 	entities.push_back(paintSphere);
@@ -428,10 +442,21 @@ void Game::LoadAssetsAndCreateEntities()
 	entities.push_back(bronzeSphere);
 	entities.push_back(roughSphere);
 	entities.push_back(woodSphere);
+	entities.push_back(woodCube);
 
+	
 	std::shared_ptr<Emitter> magicEmitter = std::make_shared<Emitter>(device, magicParticleMaterial, 100, 30, XMFLOAT3(1,0,0));
 	emitterList.push_back(magicEmitter);
 	emitterList[0]->GetTransform()->SetPosition(1, 0, 0);
+	
+	std::shared_ptr<Emitter> animatedEmitter = std::make_shared<Emitter>(device, animatedParticleMaterial, 200, 3, XMFLOAT3(INT16_MAX, INT16_MAX, INT16_MAX), 0, 8, 8);
+	emitterList.push_back(animatedEmitter);
+	emitterList[1]->GetTransform()->SetPosition(-1, 0, 0);
+
+	std::shared_ptr<Emitter> mobileEmitter = std::make_shared<Emitter>(device, smokeParticleMaterial, 100, 0.2f, XMFLOAT3(INT16_MAX, INT16_MAX, INT16_MAX), 0.1);
+	emitterList.push_back(mobileEmitter);
+	emitterList[2]->GetTransform()->SetPosition(-4, 5, 0);
+
 	// Save assets needed for drawing point lights
 	lightMesh = sphereMesh;
 	lightVS = vertexShader;
@@ -472,6 +497,7 @@ void Game::GenerateLights()
 	lights.push_back(dir2);
 	lights.push_back(dir3);
 
+	
 	// Create the rest of the lights
 	while (lights.size() < MAX_LIGHTS)
 	{
@@ -485,7 +511,7 @@ void Game::GenerateLights()
 		// Add to the list
 		lights.push_back(point);
 	}
-
+	
 }
 
 
@@ -520,6 +546,8 @@ void Game::Update(float deltaTime, float totalTime)
 	for (std::shared_ptr<Emitter> emitter : emitterList) {
 		emitter->Update(deltaTime, totalTime);
 	}
+	emitterList[2]->GetTransform()->MoveAbsolute(sin(totalTime) * deltaTime, 0, 0);
+
 	// Check individual input
 	Input& input = Input::GetInstance();
 	if (input.KeyDown(VK_ESCAPE)) Quit();
@@ -572,8 +600,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	sky->Draw(camera);
 
 	// Particle states
-	//context->OMSetBlendState(particleBlendState.Get(), 0, 0xffffffff);	// Additive blending
-	//context->OMSetDepthStencilState(particleDepthState.Get(), 0);
+	context->OMSetBlendState(particleBlendState.Get(), 0, 0xffffffff);	// Additive blending
+	context->OMSetDepthStencilState(particleDepthState.Get(), 0);
 
 	for (std::shared_ptr<Emitter> emitter : emitterList) {
 		emitter->Draw(context, camera, totalTime);

@@ -1,7 +1,7 @@
 #include "Emitter.h"
 
 Emitter::Emitter(Microsoft::WRL::ComPtr<ID3D11Device> _device, std::shared_ptr<Material> _material, int _maxParticles, int _particlesPerSecond, 
-	DirectX::XMFLOAT3 _endPos, float _radius)
+	DirectX::XMFLOAT3 _endPos, float _radius, unsigned int _spriteSheetWidth, unsigned int _spriteSheetHeight, float _spriteSheetSpeedScale)
 {
 	device = _device;
 	material = _material;
@@ -9,6 +9,12 @@ Emitter::Emitter(Microsoft::WRL::ComPtr<ID3D11Device> _device, std::shared_ptr<M
 	particlesPerSecond = _particlesPerSecond;
 	endPos = _endPos;
 	radius = _radius;
+	spriteSheetWidth = _spriteSheetWidth;
+	spriteSheetHeight = _spriteSheetHeight;
+	spriteSheetSpeedScale = _spriteSheetSpeedScale;
+
+	spriteSheetFrameWidth = (1.0f / spriteSheetWidth);
+	spriteSheetFrameHeight = (1.0f / spriteSheetHeight);
 
 	particles = new Particle[maxParticles];
 	transform = new Transform();
@@ -96,6 +102,11 @@ void Emitter::Draw(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context, std::sha
 	vs->SetMatrix4x4("projection", camera->GetProjection());
 	vs->SetFloat("currentTime", currentTime);
 	vs->SetFloat("particleLifetime", particleLifetime);
+	vs->SetInt("spriteSheetWidth", spriteSheetWidth);
+	vs->SetInt("spriteSheetHeight", spriteSheetHeight);
+	vs->SetFloat("spriteSheetFrameWidth", spriteSheetFrameWidth);
+	vs->SetFloat("spriteSheetFrameHeight", spriteSheetFrameHeight);
+	vs->SetFloat("spriteSheetSpeedScale", spriteSheetSpeedScale);
 	vs->SetShaderResourceView("ParticleData", particleDataSRV);
 	vs->CopyAllBufferData();
 

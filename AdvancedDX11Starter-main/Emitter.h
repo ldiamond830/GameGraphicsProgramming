@@ -51,9 +51,16 @@ private:
 	void CopyParticlesToGPU(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context);
 	void CreateParticlesAndGPUResources();
 
+	// Sprite sheet options
+	int spriteSheetWidth;
+	int spriteSheetHeight;
+	float spriteSheetFrameWidth;
+	float spriteSheetFrameHeight;
+	float spriteSheetSpeedScale;
 public:
 	Emitter(Microsoft::WRL::ComPtr<ID3D11Device> device, std::shared_ptr<Material> material, int maxParticles, int particlesPerSecond, 
-		DirectX::XMFLOAT3 endPos = DirectX::XMFLOAT3(INT16_MAX, INT16_MAX, INT16_MAX), float radius = 1.0f);
+		DirectX::XMFLOAT3 endPos = DirectX::XMFLOAT3(INT16_MAX, INT16_MAX, INT16_MAX), float radius = 1.0f, 
+		unsigned int spriteSheetWidth = 1, unsigned int spriteSheetHeight = 1, float spriteSheetSpeedScale = 1.0f);
 	void Update(float deltaTime, float currentTime);
 	void Draw(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context, std::shared_ptr<Camera> camera, float currentTime);
 	Transform* GetTransform();
