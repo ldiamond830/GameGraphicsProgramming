@@ -13,6 +13,19 @@
 #include <wrl/client.h>
 #include <vector>
 
+enum RenderTargetType
+{
+	SCENE_COLOR_DIRECT,
+	SCENE_COLOR_INDIRECT,
+	SCENE_NORMALS,
+	SCENE_DEPTHS,
+	SSAO_RESULTS,
+	SSAO_BLUR,
+
+	// Count is always the last one!
+	RENDER_TARGET_TYPE_COUNT
+};
+
 class Game 
 	: public DXCore
 {
@@ -55,11 +68,24 @@ private:
 	// Skybox
 	std::shared_ptr<Sky> sky;
 
+	// SSAO
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> renderTargetRTVs[RenderTargetType::RENDER_TARGET_TYPE_COUNT];
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> renderTargetSRVs[RenderTargetType::RENDER_TARGET_TYPE_COUNT];
+	DirectX::XMFLOAT4 ssaoOffsets[64];
+	int ssaoSamples = 10;
+	float ssaoRadius = 5.0f;
+	std::shared_ptr<SimpleVertexShader> fullscreenVS;
+	std::shared_ptr<SimplePixelShader> ssaoPS;
+	std::shared_ptr<SimplePixelShader> ssaoBlur;
+	std::shared_ptr<SimplePixelShader> ssaoCombine;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> randomSRV;
+
 	// General helpers for setup and drawing
 	void LoadAssetsAndCreateEntities();
 	void GenerateLights();
 	void DrawPointLights();
-
+	void CreateAllRenderTargets();
+	void CreateRenderTarget(unsigned int width, unsigned int height, Microsoft::WRL::ComPtr<ID3D11RenderTargetView>& rtv, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>& srv, DXGI_FORMAT colorFormat);
 	// UI functions
 	void UINewFrame(float deltaTime);
 	void BuildUI();
