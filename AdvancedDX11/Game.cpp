@@ -528,6 +528,7 @@ void Game::LoadAssetsAndCreateEntities()
 	lightVS = vertexShader;
 	lightPS = solidColorPS;
 
+	//temp
 	skyColor = XMFLOAT3(0.0f, 0.5f, 1.0f);
 }
 
@@ -579,7 +580,6 @@ void Game::GenerateLights()
 		// Add to the list
 		lights.push_back(point);
 	}
-	
 }
 
 
