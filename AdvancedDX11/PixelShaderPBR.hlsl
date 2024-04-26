@@ -153,19 +153,20 @@ PS_Output main(VertexToPixel input) : SV_TARGET
     float NdotV = saturate(dot(input.normal, viewToCam));
 
 	// Indirect lighting
-    float3 indirectDiffuse = pow(abs(skyColor), 2.2);
 	/*
+	float3 indirectDiffuse = IndirectDiffuse(IrradianceIBLMap, BasicSampler, input.normal);
+	
     float3 indirectSpecular = IndirectSpecular(
 		SpecularIBLMap, specularIBLTotalMipLevels,
 		BrdfLookUpMap, ClampSampler, // MUST use the clamp sampler here!
 		viewRefl, NdotV,
 		roughness, specColor);
-	*/
+	
 	// Balance indirect diff/spec
     float3 balancedDiff = DiffuseEnergyConserve(indirectDiffuse, specColor, metal);
     float3 fullIndirect = balancedDiff * surfaceColor.rgb;
-
-    PS_Output output;
+	*/
+	PS_Output output;
     output.colorDirect = float4(totalColor, 1); // No gamma correction yet!
     //output.colorIndirect = float4(fullIndirect * iblIntensity * indirectLightingEnabled, 1);
     output.colorIndirect = float4(skyColor, 1);
