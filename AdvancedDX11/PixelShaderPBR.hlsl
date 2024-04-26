@@ -26,6 +26,18 @@ cbuffer perFrame : register(b1)
 
 	// Needed for specular (reflection) calculation
 	float3 cameraPosition;
+	
+	
+	// The number of mip levels in the specular IBL map
+    int specularIBLTotalMipLevels;
+
+	// Is indirect lighting on?
+    int indirectLightingEnabled;
+
+	// Scaling ibl
+    float iblIntensity;
+	
+    float3 skyColor;
 };
 
 
@@ -47,6 +59,7 @@ Texture2D NormalMap			: register(t1);
 Texture2D RoughnessMap		: register(t2);
 Texture2D MetalMap			: register(t3);
 SamplerState BasicSampler	: register(s0);
+SamplerState ClampSampler : register(s1);
 
 struct PS_Output
 {
@@ -55,6 +68,37 @@ struct PS_Output
     float4 normals : SV_TARGET2;
     float depths : SV_TARGET3;
 };
+
+// IBL (indirect PBR) textures not yet implemented
+Texture2D BrdfLookUpMap : register(t4);
+TextureCube IrradianceIBLMap : register(t5);
+TextureCube SpecularIBLMap : register(t6);
+
+float3 IndirectDiffuse(TextureCube irrMap, SamplerState samp, float3 direction)
+{
+	// Sample in the specified direction - the irradiance map
+	// is a pre-computed cube map which represents light
+	// coming into this pixel from a particular hemisphere
+    float3 diff = irrMap.SampleLevel(samp, direction, 0).rgb;
+    return pow(abs(diff), 2.2);
+
+}
+
+float3 IndirectSpecular(TextureCube envMap, int mips, Texture2D brdfLookUp, SamplerState samp, float3 viewRefl, float NdotV, float roughness, float3 specColor)
+{
+	// Ensure roughness isn't zero
+    roughness = max(roughness, MIN_ROUGHNESS);
+
+	// Calculate half of the split-sum approx (this texture is not gamma-corrected, as it just holds raw data)
+    float2 indirectBRDF = brdfLookUp.Sample(samp, float2(NdotV, roughness)).rg;
+    float3 indSpecFresnel = specColor * indirectBRDF.x + indirectBRDF.y; // Spec color is f0
+
+	// Sample the convolved environment map (other half of split-sum)
+    float3 envSample = envMap.SampleLevel(samp, viewRefl, roughness * (mips - 1)).rgb;
+
+	// Adjust environment sample by fresnel
+    return pow(abs(envSample), 2.2) * indSpecFresnel;
+}
 
 // Entry point for this pixel shader
 PS_Output main(VertexToPixel input) : SV_TARGET
@@ -102,11 +146,29 @@ PS_Output main(VertexToPixel input) : SV_TARGET
 			break;
 		}
 	}
+	
+	// Calculate requisite reflection vectors
+    float3 viewToCam = normalize(cameraPosition - input.worldPos);
+    float3 viewRefl = normalize(reflect(-viewToCam, input.normal));
+    float NdotV = saturate(dot(input.normal, viewToCam));
+
+	// Indirect lighting
+    float3 indirectDiffuse = pow(abs(skyColor), 2.2);
+	/*
+    float3 indirectSpecular = IndirectSpecular(
+		SpecularIBLMap, specularIBLTotalMipLevels,
+		BrdfLookUpMap, ClampSampler, // MUST use the clamp sampler here!
+		viewRefl, NdotV,
+		roughness, specColor);
+	*/
+	// Balance indirect diff/spec
+    float3 balancedDiff = DiffuseEnergyConserve(indirectDiffuse, specColor, metal);
+    float3 fullIndirect = balancedDiff * surfaceColor.rgb;
 
     PS_Output output;
     output.colorDirect = float4(totalColor, 1); // No gamma correction yet!
     //output.colorIndirect = float4(fullIndirect * iblIntensity * indirectLightingEnabled, 1);
-    output.colorIndirect = float4(0, 0, 0, 0);
+    output.colorIndirect = float4(skyColor, 1);
     output.normals = float4(input.normal * 0.5f + 0.5f, 1);
     output.depths = input.screenPosition.z;
     return output;

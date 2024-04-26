@@ -46,7 +46,7 @@ private:
 	// Our scene
 	std::vector<std::shared_ptr<GameEntity>> entities;
 	std::shared_ptr<Camera> camera;
-
+	DirectX::XMFLOAT3 skyColor;
 	// Lights
 	std::vector<Light> lights;
 	int lightCount;

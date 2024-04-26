@@ -527,6 +527,8 @@ void Game::LoadAssetsAndCreateEntities()
 	lightMesh = sphereMesh;
 	lightVS = vertexShader;
 	lightPS = solidColorPS;
+
+	skyColor = XMFLOAT3(0.0f, 0.5f, 1.0f);
 }
 
 
@@ -664,6 +666,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		ps->SetData("lights", (void*)(&lights[0]), sizeof(Light) * lightCount);
 		ps->SetInt("lightCount", lightCount);
 		ps->SetFloat3("cameraPosition", camera->GetTransform()->GetPosition());
+		ps->SetFloat3("skyColor", skyColor);
 		ps->CopyBufferData("perFrame");
 
 		// Draw the entity
@@ -749,7 +752,7 @@ void Game::Draw(float deltaTime, float totalTime)
 
 
 		ssaoCombine->SetShader();
-		ssaoCombine->SetShaderResourceView("SceneColorsDirect", renderTargetSRVs[RenderTargetType::SCENE_COLOR_DIRECT]);
+		ssaoCombine->SetShaderResourceView("SceneColorsNoAmbient", renderTargetSRVs[RenderTargetType::SCENE_COLOR_DIRECT]);
 		ssaoCombine->SetShaderResourceView("SceneColorsIndirect", renderTargetSRVs[RenderTargetType::SCENE_COLOR_INDIRECT]);
 		ssaoCombine->SetShaderResourceView("SSAOBlur", renderTargetSRVs[RenderTargetType::SSAO_BLUR]);
 		//ps->SetInt("ssaoOutputOnly", ssaoOutputOnly);
